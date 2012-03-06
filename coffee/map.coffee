@@ -73,9 +73,7 @@ class Map
   moveUnit: (from, to) ->
     for unit in @units
       if unit.pos.x == from.x && unit.pos.y == from.y
-        if unit.canMoveTo(@getTile(to.x,to.y))
-          unit.pos.x = to.x
-          unit.pos.y = to.y
+        unit.move(to, @getTile(to.x, to.y))
 
   unitOnTile: (x, y) ->
     @units.some (unit) ->

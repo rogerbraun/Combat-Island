@@ -3,12 +3,11 @@ Unit = (function() {
   function Unit(image_src) {
     this.image = new Image;
     this.image.src = image_src;
-    this.orig_image = this.image;
     this.pos = {
       x: 0,
       y: 0
     };
-    this.direction = "s";
+    this.direction = "n";
     this.canMoveOn = ["g", "f"];
   }
   Unit.prototype.setPosition = function(x, y) {
@@ -20,6 +19,56 @@ Unit = (function() {
       return tile === allowed;
     });
   };
+  Unit.prototype.move = function(to, tile) {
+    var from;
+    from = this.pos;
+    if (this.canMoveTo(tile)) {
+      this.pos = to;
+      return this.calcDirection(from, to);
+    }
+  };
+  Unit.prototype.calcDirection = function(from, to) {
+    var dir;
+    dir = "";
+    if (from.y < to.y) {
+      dir += "s";
+    } else {
+      dir += "n";
+    }
+    if (from.x < to.x) {
+      dir += "e";
+    }
+    if (from.x > to.x) {
+      dir += "w";
+    }
+    return this.direction = dir;
+  };
+  Unit.prototype.rotate = function(image) {
+    var deg;
+    switch (this.direction) {
+      case "s":
+        deg = 0;
+        break;
+      case "sw":
+        deg = 60;
+        break;
+      case "nw":
+        deg = 120;
+        break;
+      case "n":
+        deg = 180;
+        break;
+      case "ne":
+        deg = 240;
+        break;
+      case "se":
+        deg = 300;
+        break;
+      default:
+        deg = 0;
+    }
+    return Filters.rotate(image, deg);
+  };
   Unit.prototype.draw = function(canvas, offset, zoom, selected) {
     var context, hexOffsetY, image, x, xPos, y, yPos;
     context = canvas.getContext('2d');
@@ -30,7 +79,7 @@ Unit = (function() {
     } else {
       hexOffsetY = 0;
     }
-    image = this.image;
+    image = this.rotate(this.image);
     if (selected.x === x && selected.y === y) {
       image = Filters.brighten(image);
     }

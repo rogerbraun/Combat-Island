@@ -87,7 +87,7 @@ Map = (function() {
     _results = [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       unit = _ref[_i];
-      _results.push(unit.pos.x === from.x && unit.pos.y === from.y ? unit.canMoveTo(this.getTile(to.x, to.y)) ? (unit.pos.x = to.x, unit.pos.y = to.y) : void 0 : void 0);
+      _results.push(unit.pos.x === from.x && unit.pos.y === from.y ? unit.move(to, this.getTile(to.x, to.y)) : void 0);
     }
     return _results;
   };
