@@ -47,7 +47,7 @@ class Map
               @selected =
                 x: x
                 y: y
-              @setTile(x,y," ")
+              console.log @selected
 
   drawTiles: (canvas, offset, zoom) ->
     context = canvas.getContext '2d'
@@ -63,6 +63,9 @@ class Map
 
           xPos = (x * 150) / zoom + offset.x
           yPos = (y * 200 + hexOffsetY) / zoom + offset.y
+
+          if @selected.x == x && @selected.y == y
+            image = Filters.invert(image)
 
           context.drawImage image, 0, 0, image.width, image.height, xPos , yPos, image.width / zoom, image.height / zoom
   

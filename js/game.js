@@ -1,5 +1,4 @@
 var Game, black_screen;
-
 black_screen = {
   draw: function(canvas) {
     var context;
@@ -8,9 +7,7 @@ black_screen = {
     return context.fillRect(0, 0, canvas.width, canvas.height);
   }
 };
-
 Game = (function() {
-
   function Game(canvas) {
     this.canvas = canvas;
     this.map = black_screen;
@@ -20,11 +17,9 @@ Game = (function() {
     };
     this.zoom = 2;
   }
-
   Game.prototype.draw = function() {
     return this.map.draw(this.canvas, this.offset, this.zoom);
   };
-
   Game.prototype.register_handlers = function() {
     var dragging, dragpos, that;
     console.log("Registering Handlers...");
@@ -77,20 +72,16 @@ Game = (function() {
       return that.draw();
     };
   };
-
   Game.prototype.fullWindow = function() {
     console.log("Resizing canvas...");
     this.canvas.width = document.body.clientWidth;
     return this.canvas.height = document.body.clientHeight;
   };
-
   Game.prototype.start = function() {
     console.log("Starting the game...");
     this.register_handlers();
     this.fullWindow();
     return this.draw();
   };
-
   return Game;
-
 })();
