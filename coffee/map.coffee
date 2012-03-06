@@ -4,8 +4,9 @@ class Map
     @height = height
     @tiles = []
     @images = {}
+    @units = []
     @selected = false
-  
+
   getTile: (x, y) ->
     @tiles[x + y * @width]
 
@@ -64,12 +65,28 @@ class Map
           xPos = (x * 150) / zoom + offset.x
           yPos = (y * 200 + hexOffsetY) / zoom + offset.y
 
-          if @selected.x == x && @selected.y == y
-            image = Filters.invert(image)
+          if @selected.x == x && @selected.y == y && !@unitOnTile(x, y)
+            image = Filters.brighten(image)
 
           context.drawImage image, 0, 0, image.width, image.height, xPos , yPos, image.width / zoom, image.height / zoom
-  
+
+  moveUnit: (from, to) ->
+    for unit in @units
+      if unit.pos.x == from.x && unit.pos.y == from.y
+        if unit.canMoveTo(@getTile(to.x,to.y))
+          unit.pos.x = to.x
+          unit.pos.y = to.y
+
+  unitOnTile: (x, y) ->
+    @units.some (unit) ->
+      unit.pos.x == x && unit.pos.y == y
+      
+  drawUnits: (canvas, offset, zoom) ->
+    for unit in @units
+      unit.draw canvas, offset, zoom, @selected
+
   draw: (canvas, offset, zoom) ->
-    @drawBackground(canvas)
-    @drawTiles(canvas, offset, zoom)
+    @drawBackground canvas
+    @drawTiles canvas, offset, zoom
+    @drawUnits canvas, offset, zoom
 

@@ -33,6 +33,7 @@ Game = (function() {
       return false;
     };
     this.canvas.onmousedown = function(event) {
+      var old_selected;
       console.log(event);
       if (event.which === 3) {
         dragging = true;
@@ -42,7 +43,13 @@ Game = (function() {
         };
       }
       if (event.which === 1) {
+        old_selected = that.map.selected;
         that.map.select(event.clientX, event.clientY, that.offset, that.zoom);
+        if (that.map.unitOnTile(old_selected.x, old_selected.y) && !that.map.unitOnTile(that.map.selected.x, that.map.selected.y)) {
+          console.log("Moving unit...");
+          that.map.moveUnit(old_selected, that.map.selected);
+          that.map.selected = false;
+        }
         return that.draw();
       }
     };

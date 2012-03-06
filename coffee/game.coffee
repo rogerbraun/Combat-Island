@@ -39,7 +39,17 @@ class Game
 
       # Left Click
       if event.which == 1
+        old_selected = that.map.selected
+
         that.map.select(event.clientX, event.clientY, that.offset, that.zoom)
+
+        # Move units if previous click was on unit and new one is on empty tile
+        if that.map.unitOnTile(old_selected.x, old_selected.y) && !that.map.unitOnTile(that.map.selected.x, that.map.selected.y)
+          console.log("Moving unit...")
+          that.map.moveUnit(old_selected, that.map.selected)
+          # deselect
+          that.map.selected = false
+
         that.draw()
 
     @canvas.onmouseup = (event) ->

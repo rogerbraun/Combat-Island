@@ -39,6 +39,12 @@ level1.setImage 'w', 'images/water-tile.png'
 level1.setImage 'g', 'images/grass-tile.png'
 level1.setImage 'f', 'images/forest-tile.png'
 
+tank = new Unit('images/tank-unit.png')
+tank.setPosition(7, 7)
+
+level1.units.push(tank)
+
+
 window.onload = () ->
   canvas = document.getElementById 'canvas'
   game = new Game(canvas)
