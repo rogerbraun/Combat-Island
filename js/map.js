@@ -7,6 +7,7 @@ Map = (function() {
     this.images = {};
     this.units = [];
     this.selected = false;
+    this.hover = false;
   }
   Map.prototype.getTile = function(x, y) {
     return this.tiles[x + y * this.width];
@@ -45,8 +46,11 @@ Map = (function() {
     context.fillStyle = 'black';
     return context.fillRect(0, 0, canvas.width, canvas.height);
   };
-  Map.prototype.select = function(targetX, targetY, offset, zoom) {
+  Map.prototype.select = function(targetX, targetY, offset, zoom, hover) {
     var hexOffsetY, image, x, xPos, y, yPos, _ref, _results;
+    if (hover == null) {
+      hover = false;
+    }
     _results = [];
     for (y = 0, _ref = this.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
       _results.push((function() {
@@ -54,7 +58,10 @@ Map = (function() {
         _results2 = [];
         for (x = 0, _ref2 = this.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
           image = this.images[this.getTile(x, y)];
-          _results2.push(image ? (x % 2 === 1 ? hexOffsetY = 100 : hexOffsetY = 0, xPos = (x * 150) / zoom + offset.x, yPos = (y * 200 + hexOffsetY) / zoom + offset.y, targetX >= xPos && targetX < xPos + image.width / zoom ? targetY >= yPos && targetY < yPos + image.height / zoom ? (this.selected = {
+          _results2.push(image ? (x % 2 === 1 ? hexOffsetY = 100 : hexOffsetY = 0, xPos = (x * 150) / zoom + offset.x, yPos = (y * 200 + hexOffsetY) / zoom + offset.y, targetX >= xPos && targetX < xPos + image.width / zoom ? targetY >= yPos && targetY < yPos + image.height / zoom ? hover ? this.hover = {
+            x: x,
+            y: y
+          } : (this.selected = {
             x: x,
             y: y
           }, console.log(this.selected)) : void 0 : void 0) : void 0);
@@ -74,7 +81,7 @@ Map = (function() {
         _results2 = [];
         for (x = 0, _ref2 = this.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
           image = this.images[this.getTile(x, y)];
-          _results2.push(image ? (x % 2 === 1 ? hexOffsetY = 100 : hexOffsetY = 0, xPos = (x * 150) / zoom + offset.x, yPos = (y * 200 + hexOffsetY) / zoom + offset.y, this.selected.x === x && this.selected.y === y && !this.unitOnTile(x, y) ? image = Filters.brighten(image) : void 0, context.drawImage(image, 0, 0, image.width, image.height, xPos, yPos, image.width / zoom, image.height / zoom)) : void 0);
+          _results2.push(image ? (x % 2 === 1 ? hexOffsetY = 100 : hexOffsetY = 0, xPos = (x * 150) / zoom + offset.x, yPos = (y * 200 + hexOffsetY) / zoom + offset.y, this.selected.x === x && this.selected.y === y && !this.unitOnTile(x, y) ? image = Filters.brighten(image) : void 0, this.hover.x === x && this.hover.y === y && this.unitOnTile(this.selected.x, this.selected.y) ? image = Filters.brighten(image) : void 0, context.drawImage(image, 0, 0, image.width, image.height, xPos, yPos, image.width / zoom, image.height / zoom)) : void 0);
         }
         return _results2;
       }).call(this));

@@ -61,7 +61,9 @@ class Game
         that.offset.y += event.clientY - dragpos.y
         dragpos.x = event.clientX
         dragpos.y = event.clientY
-        that.draw()
+
+      that.map.select(event.clientX, event.clientY, that.offset, that.zoom, true)
+      that.draw()
 
     @canvas.onmousewheel = (event) ->
       console.log("Zooming...")
