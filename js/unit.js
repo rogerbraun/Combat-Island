@@ -3,6 +3,7 @@ Unit = (function() {
   function Unit(image_src) {
     this.image = new Image;
     this.image.src = image_src;
+    this.orig_image = this.image;
     this.pos = {
       x: 0,
       y: 0

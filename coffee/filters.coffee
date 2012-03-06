@@ -1,12 +1,16 @@
 getPixels = (image) ->
-  canvas = document.createElement 'canvas'
-  canvas.width = image.width
-  canvas.height = image.height
+  canvas = getCanvas(image)
   context = canvas.getContext '2d'
   context.drawImage(image,0,0)
   imgd = context.getImageData(0,0,canvas.width,canvas.height)
   pixels = imgd.data
   [context, imgd, pixels, canvas]
+
+getCanvas = (image) ->
+  canvas = document.createElement 'canvas'
+  canvas.width = image.width
+  canvas.height = image.height
+  canvas
 
 
 Filters =
@@ -28,5 +32,19 @@ Filters =
       pixels[i + 2] = Math.min(255, pixels[i + 2] + 60)
 
     context.putImageData(imgd,0,0)
+    canvas
+
+  rotate: (image, deg = 90) ->
+    radians = (Math.PI / 180) * deg
+    canvas = getCanvas(image)
+    context = canvas.getContext '2d'
+
+    context.save()
+    context.translate (image.width / 2), (image.height / 2)
+    context.rotate radians
+    context.translate -(image.width / 2), -(image.height / 2)
+    context.drawImage(image, 0, 0)
+    context.restore()
+    context.fill()
     canvas
 

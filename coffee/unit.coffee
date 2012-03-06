@@ -2,6 +2,7 @@ class Unit
   constructor: (image_src) ->
     @image = new Image
     @image.src = image_src
+    @orig_image = @image
     @pos =
       x: 0
       y: 0
