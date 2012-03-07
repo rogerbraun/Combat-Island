@@ -1,5 +1,15 @@
 var Map;
 
+Array.prototype.uniq = function() {
+  var el, res, _i, _len;
+  res = [];
+  for (_i = 0, _len = this.length; _i < _len; _i++) {
+    el = this[_i];
+    if (res.indexOf(el) === -1) res.push(el);
+  }
+  return res;
+};
+
 Map = (function() {
 
   function Map(width, height) {
@@ -10,6 +20,7 @@ Map = (function() {
     this.units = [];
     this.selected = false;
     this.hovered = false;
+    this.invertedCache = {};
   }
 
   Map.prototype.getTile = function(x, y) {
@@ -161,14 +172,29 @@ Map = (function() {
   };
 
   Map.prototype.drawSpecials = function(canvas, offset, zoom) {
-    var image;
+    var image, move, moves, unit, _i, _len, _results;
     if (this.selected) {
       if (this.unitOnTile(this.selected.x, this.selected.y)) {
         if (this.hovered) {
           image = this.images[this.getTile(this.hovered.x, this.hovered.y)];
           image = Filters.brighten(image);
-          return this.drawTile(this.hovered, canvas, offset, zoom, image);
+          this.drawTile(this.hovered, canvas, offset, zoom, image);
         }
+        unit = this.getUnit(this.selected);
+        moves = this.possibleMoves(unit);
+        _results = [];
+        for (_i = 0, _len = moves.length; _i < _len; _i++) {
+          move = moves[_i];
+          if (this.invertedCache[this.getTile(move.x, move.y)]) {
+            image = this.invertedCache[this.getTile(move.x, move.y)];
+          } else {
+            image = this.images[this.getTile(move.x, move.y)];
+            image = Filters.invert(image);
+            this.invertedCache[this.getTile(move.x, move.y)] = image;
+          }
+          _results.push(this.drawTile(move, canvas, offset, zoom, image));
+        }
+        return _results;
       } else {
         image = this.images[this.getTile(this.selected.x, this.selected.y)];
         image = Filters.brighten(image);
@@ -177,19 +203,42 @@ Map = (function() {
     }
   };
 
-  Map.prototype.moveUnit = function(from, to) {
-    var unit, _i, _len, _ref, _results;
+  Map.prototype.getUnit = function(pos) {
+    var unit, _i, _len, _ref;
     _ref = this.units;
-    _results = [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       unit = _ref[_i];
-      if (unit.pos.x === from.x && unit.pos.y === from.y) {
-        _results.push(unit.move(to, this.getTile(to.x, to.y)));
-      } else {
-        _results.push(void 0);
-      }
+      if (unit.pos.x === pos.x && unit.pos.y === pos.y) return unit;
     }
-    return _results;
+  };
+
+  Map.prototype.moveUnit = function(from, to) {
+    var unit;
+    unit = this.getUnit(from);
+    return unit.move(to, this.getTile(to.x, to.y));
+  };
+
+  Map.prototype.possibleMoves = function(unit) {
+    return this.possibleMovesHelper(unit, unit.moves - 1, this.neighbours(unit.pos));
+  };
+
+  Map.prototype.possibleMovesHelper = function(unit, movesLeft, neighbours, visited) {
+    var neighbour, next_neighbours, res, that, _i, _len;
+    that = this;
+    neighbours = neighbours.filter(function(neighbour) {
+      return unit.canMoveTo(that.getTile(neighbour.x, neighbour.y));
+    });
+    if (movesLeft === 0) {
+      return neighbours;
+    } else {
+      res = [].concat(neighbours);
+      for (_i = 0, _len = neighbours.length; _i < _len; _i++) {
+        neighbour = neighbours[_i];
+        next_neighbours = this.neighbours(neighbour);
+        res = res.concat(this.possibleMovesHelper(unit, movesLeft - 1, next_neighbours));
+      }
+      return res.uniq();
+    }
   };
 
   Map.prototype.unitOnTile = function(x, y) {

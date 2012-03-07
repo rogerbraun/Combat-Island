@@ -7,6 +7,7 @@ class Unit
       y: 0
     @direction = "n"
     @canMoveOn = ["g","f"]
+    @moves = 3
 
   setPosition: (x, y) ->
     @pos.x = x

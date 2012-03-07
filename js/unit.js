@@ -11,6 +11,7 @@ Unit = (function() {
     };
     this.direction = "n";
     this.canMoveOn = ["g", "f"];
+    this.moves = 3;
   }
 
   Unit.prototype.setPosition = function(x, y) {

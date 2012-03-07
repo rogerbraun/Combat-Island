@@ -1,3 +1,10 @@
+Array::uniq = ->
+  res = []
+  for el in this
+    if res.indexOf(el) == -1
+      res.push el
+  res
+
 class Map
   constructor: (width, height) ->
     @width = width
@@ -7,6 +14,7 @@ class Map
     @units = []
     @selected = false
     @hovered = false
+    @invertedCache = {}
 
   getTile: (x, y) ->
     @tiles[x + y * @width]
@@ -111,21 +119,53 @@ class Map
         @drawTile({x: x, y: y}, canvas, offset, zoom, image)
 
   drawSpecials: (canvas, offset, zoom) ->
+
     if @selected
       if @unitOnTile(@selected.x, @selected.y)
         if @hovered
           image = @images[@getTile(@hovered.x, @hovered.y)]
           image = Filters.brighten(image)
           @drawTile(@hovered, canvas, offset, zoom, image)
+        unit = @getUnit @selected
+        moves = @possibleMoves unit
+        for move in moves
+          if @invertedCache[@getTile(move.x, move.y)]
+            image = @invertedCache[@getTile(move.x, move.y)]
+          else
+            image = @images[@getTile(move.x, move.y)]
+            image = Filters.invert(image)
+            @invertedCache[@getTile(move.x, move.y)] = image
+          @drawTile(move, canvas, offset, zoom, image)
       else
         image = @images[@getTile(@selected.x, @selected.y)]
         image = Filters.brighten(image)
         @drawTile(@selected, canvas, offset, zoom, image)
         
-  moveUnit: (from, to) ->
+  getUnit: (pos) ->
     for unit in @units
-      if unit.pos.x == from.x && unit.pos.y == from.y
-        unit.move(to, @getTile(to.x, to.y))
+      if unit.pos.x == pos.x && unit.pos.y == pos.y
+        return unit
+
+  moveUnit: (from, to) ->
+    unit = @getUnit from
+    unit.move(to, @getTile(to.x, to.y))
+
+  possibleMoves: (unit) ->
+    @possibleMovesHelper unit, unit.moves - 1, @neighbours(unit.pos)
+
+  possibleMovesHelper: (unit, movesLeft, neighbours, visited) ->
+    that = this
+    neighbours = neighbours.filter (neighbour) ->
+      unit.canMoveTo(that.getTile(neighbour.x, neighbour.y))
+
+    if movesLeft == 0
+      neighbours
+    else
+      res = [].concat(neighbours)
+      for neighbour in neighbours
+        next_neighbours = @neighbours neighbour
+        res = res.concat(@possibleMovesHelper(unit, movesLeft - 1, next_neighbours))
+      res.uniq()
 
   unitOnTile: (x, y) ->
     @units.some (unit) ->
