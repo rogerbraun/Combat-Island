@@ -9,7 +9,7 @@ Map = (function() {
     this.images = {};
     this.units = [];
     this.selected = false;
-    this.hover = false;
+    this.hovered = false;
   }
 
   Map.prototype.getTile = function(x, y) {
@@ -54,52 +54,40 @@ Map = (function() {
     return context.fillRect(0, 0, canvas.width, canvas.height);
   };
 
-  Map.prototype.select = function(targetX, targetY, offset, zoom, hover) {
-    var hexOffsetY, image, x, xPos, y, yPos, _ref, _results;
-    if (hover == null) hover = false;
-    _results = [];
+  Map.prototype.canvasPosToMapPos = function(targetX, targetY, offset, zoom) {
+    var hexOffsetY, image, res, x, xPos, y, yPos, _ref, _ref2;
+    res = false;
     for (y = 0, _ref = this.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
-      _results.push((function() {
-        var _ref2, _results2;
-        _results2 = [];
-        for (x = 0, _ref2 = this.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
-          image = this.images[this.getTile(x, y)];
-          if (image) {
-            if (x % 2 === 1) {
-              hexOffsetY = 100;
-            } else {
-              hexOffsetY = 0;
-            }
-            xPos = (x * 150) / zoom + offset.x;
-            yPos = (y * 200 + hexOffsetY) / zoom + offset.y;
-            if (targetX >= xPos && targetX < xPos + image.width / zoom) {
-              if (targetY >= yPos && targetY < yPos + image.height / zoom) {
-                if (hover) {
-                  _results2.push(this.hover = {
-                    x: x,
-                    y: y
-                  });
-                } else {
-                  this.selected = {
-                    x: x,
-                    y: y
-                  };
-                  _results2.push(console.log(this.selected));
-                }
-              } else {
-                _results2.push(void 0);
-              }
-            } else {
-              _results2.push(void 0);
-            }
+      for (x = 0, _ref2 = this.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
+        image = this.images[this.getTile(x, y)];
+        if (image) {
+          if (x % 2 === 1) {
+            hexOffsetY = 100;
           } else {
-            _results2.push(void 0);
+            hexOffsetY = 0;
+          }
+          xPos = (x * 150) / zoom + offset.x;
+          yPos = (y * 200 + hexOffsetY) / zoom + offset.y;
+          if (targetX >= xPos && targetX < xPos + image.width / zoom) {
+            if (targetY >= yPos && targetY < yPos + image.height / zoom) {
+              res = {
+                x: x,
+                y: y
+              };
+            }
           }
         }
-        return _results2;
-      }).call(this));
+      }
     }
-    return _results;
+    return res;
+  };
+
+  Map.prototype.select = function(targetX, targetY, offset, zoom) {
+    return this.selected = this.canvasPosToMapPos(targetX, targetY, offset, zoom);
+  };
+
+  Map.prototype.hover = function(targetX, targetY, offset, zoom) {
+    return this.hovered = this.canvasPosToMapPos(targetX, targetY, offset, zoom);
   };
 
   Map.prototype.drawTiles = function(canvas, offset, zoom) {
@@ -123,7 +111,7 @@ Map = (function() {
             if (this.selected.x === x && this.selected.y === y && !this.unitOnTile(x, y)) {
               image = Filters.brighten(image);
             }
-            if (this.hover.x === x && this.hover.y === y && this.unitOnTile(this.selected.x, this.selected.y)) {
+            if (this.hovered.x === x && this.hovered.y === y && this.unitOnTile(this.selected.x, this.selected.y)) {
               image = Filters.brighten(image);
             }
             _results2.push(context.drawImage(image, 0, 0, image.width, image.height, xPos, yPos, image.width / zoom, image.height / zoom));

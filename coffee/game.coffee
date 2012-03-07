@@ -62,7 +62,7 @@ class Game
         dragpos.x = event.clientX
         dragpos.y = event.clientY
 
-      that.map.select(event.clientX, event.clientY, that.offset, that.zoom, true)
+      that.map.hover(event.clientX, event.clientY, that.offset, that.zoom)
       that.draw()
 
     @canvas.onmousewheel = (event) ->

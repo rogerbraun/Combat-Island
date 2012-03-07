@@ -68,7 +68,7 @@ Game = (function() {
         dragpos.x = event.clientX;
         dragpos.y = event.clientY;
       }
-      that.map.select(event.clientX, event.clientY, that.offset, that.zoom, true);
+      that.map.hover(event.clientX, event.clientY, that.offset, that.zoom);
       return that.draw();
     };
     return this.canvas.onmousewheel = function(event) {

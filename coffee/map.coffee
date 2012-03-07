@@ -6,7 +6,7 @@ class Map
     @images = {}
     @units = []
     @selected = false
-    @hover = false
+    @hovered = false
 
   getTile: (x, y) ->
     @tiles[x + y * @width]
@@ -31,7 +31,9 @@ class Map
     context.fillStyle = 'black'
     context.fillRect 0, 0, canvas.width, canvas.height
 
-  select: (targetX, targetY, offset, zoom, hover = false) ->
+  # Rework this. It's slow and slightly incorrect  
+  canvasPosToMapPos: (targetX, targetY, offset, zoom) ->
+    res = false
     for y in [0...@height]
       for x in [0...@width]
         image = @images[@getTile(x, y)]
@@ -46,16 +48,17 @@ class Map
 
           if targetX >= xPos && targetX < xPos + image.width / zoom
             if targetY >= yPos && targetY < yPos + image.height / zoom
-              # TODO: Really ugly, make a real abstraction
-              if hover
-                @hover =
-                  x: x
-                  y: y
-              else
-                @selected =
-                  x: x
-                  y: y
-                console.log @selected
+              res =
+                x: x
+                y: y
+    res
+
+
+  select: (targetX, targetY, offset, zoom) ->
+    @selected = @canvasPosToMapPos targetX, targetY, offset, zoom
+
+  hover: (targetX, targetY, offset, zoom) ->
+    @hovered = @canvasPosToMapPos targetX, targetY, offset, zoom
 
   drawTiles: (canvas, offset, zoom) ->
     context = canvas.getContext '2d'
@@ -77,7 +80,7 @@ class Map
             image = Filters.brighten(image)
 
           # Highlight hovered if a unit is selected
-          if @hover.x == x && @hover.y == y && @unitOnTile(@selected.x, @selected.y)
+          if @hovered.x == x && @hovered.y == y && @unitOnTile(@selected.x, @selected.y)
             image = Filters.brighten(image)
 
           context.drawImage image, 0, 0, image.width, image.height, xPos , yPos, image.width / zoom, image.height / zoom
