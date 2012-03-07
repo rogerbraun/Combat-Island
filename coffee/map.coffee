@@ -87,55 +87,41 @@ class Map
 
     neighbours
 
-  drawTiles: (canvas, offset, zoom) ->
+  drawTile: (pos, canvas, offset, zoom, image) ->
+    x = pos.x
+    y = pos.y
     context = canvas.getContext '2d'
 
+    # Tiles are offset because of the hexagonal grid
+    if image
+      if x % 2 == 1
+        hexOffsetY = 100
+      else
+        hexOffsetY = 0
+
+      xPos = (x * 150) / zoom + offset.x
+      yPos = (y * 200 + hexOffsetY) / zoom + offset.y
+
+      context.drawImage image, 0, 0, image.width, image.height, xPos , yPos, image.width / zoom, image.height / zoom
+
+  drawTiles: (canvas, offset, zoom) ->
     for y in [0...@height]
       for x in [0...@width]
         image = @images[@getTile(x, y)]
+        @drawTile({x: x, y: y}, canvas, offset, zoom, image)
 
-        # Tiles are offset because of the hexagonal grid
-        if image
-          if x % 2 == 1
-            hexOffsetY = 100
-          else
-            hexOffsetY = 0
-
-          xPos = (x * 150) / zoom + offset.x
-          yPos = (y * 200 + hexOffsetY) / zoom + offset.y
-
-          # Highlight clicked tile
-          if @selected.x == x && @selected.y == y && !@unitOnTile(x, y)
-            image = Filters.brighten(image)
-
-          # Highlight hovered if a unit is selected
-          if @hovered.x == x && @hovered.y == y && @unitOnTile(@selected.x, @selected.y)
-            image = Filters.brighten(image)
-
-          context.drawImage image, 0, 0, image.width, image.height, xPos , yPos, image.width / zoom, image.height / zoom
-    #
-    # Invert neighbours of selected
+  drawSpecials: (canvas, offset, zoom) ->
     if @selected
-      neighbours = @neighbours @selected
-      for neighbour in neighbours
-        x = neighbour.x
-        y = neighbour.y
-
-        if x % 2 == 1
-          hexOffsetY = 100
-        else
-          hexOffsetY = 0
-
-        xPos = (x * 150) / zoom + offset.x
-        yPos = (y * 200 + hexOffsetY) / zoom + offset.y
-
-        image = @images[@getTile(x, y)]
-
-        image = Filters.invert(image)
-        context.drawImage image, 0, 0, image.width, image.height, xPos , yPos, image.width / zoom, image.height / zoom
-
-           
-
+      if @unitOnTile(@selected.x, @selected.y)
+        if @hovered
+          image = @images[@getTile(@hovered.x, @hovered.y)]
+          image = Filters.brighten(image)
+          @drawTile(@hovered, canvas, offset, zoom, image)
+      else
+        image = @images[@getTile(@selected.x, @selected.y)]
+        image = Filters.brighten(image)
+        @drawTile(@selected, canvas, offset, zoom, image)
+        
   moveUnit: (from, to) ->
     for unit in @units
       if unit.pos.x == from.x && unit.pos.y == from.y
@@ -152,5 +138,6 @@ class Map
   draw: (canvas, offset, zoom) ->
     @drawBackground canvas
     @drawTiles canvas, offset, zoom
+    @drawSpecials canvas, offset, zoom
     @drawUnits canvas, offset, zoom
 

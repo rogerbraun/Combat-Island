@@ -123,49 +123,57 @@ Map = (function() {
     return neighbours;
   };
 
-  Map.prototype.drawTiles = function(canvas, offset, zoom) {
-    var context, hexOffsetY, image, neighbour, neighbours, x, xPos, y, yPos, _i, _len, _ref, _ref2, _results;
+  Map.prototype.drawTile = function(pos, canvas, offset, zoom, image) {
+    var context, hexOffsetY, x, xPos, y, yPos;
+    x = pos.x;
+    y = pos.y;
     context = canvas.getContext('2d');
-    for (y = 0, _ref = this.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
-      for (x = 0, _ref2 = this.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
-        image = this.images[this.getTile(x, y)];
-        if (image) {
-          if (x % 2 === 1) {
-            hexOffsetY = 100;
-          } else {
-            hexOffsetY = 0;
-          }
-          xPos = (x * 150) / zoom + offset.x;
-          yPos = (y * 200 + hexOffsetY) / zoom + offset.y;
-          if (this.selected.x === x && this.selected.y === y && !this.unitOnTile(x, y)) {
-            image = Filters.brighten(image);
-          }
-          if (this.hovered.x === x && this.hovered.y === y && this.unitOnTile(this.selected.x, this.selected.y)) {
-            image = Filters.brighten(image);
-          }
-          context.drawImage(image, 0, 0, image.width, image.height, xPos, yPos, image.width / zoom, image.height / zoom);
-        }
+    if (image) {
+      if (x % 2 === 1) {
+        hexOffsetY = 100;
+      } else {
+        hexOffsetY = 0;
       }
+      xPos = (x * 150) / zoom + offset.x;
+      yPos = (y * 200 + hexOffsetY) / zoom + offset.y;
+      return context.drawImage(image, 0, 0, image.width, image.height, xPos, yPos, image.width / zoom, image.height / zoom);
     }
-    if (this.selected) {
-      neighbours = this.neighbours(this.selected);
-      _results = [];
-      for (_i = 0, _len = neighbours.length; _i < _len; _i++) {
-        neighbour = neighbours[_i];
-        x = neighbour.x;
-        y = neighbour.y;
-        if (x % 2 === 1) {
-          hexOffsetY = 100;
-        } else {
-          hexOffsetY = 0;
+  };
+
+  Map.prototype.drawTiles = function(canvas, offset, zoom) {
+    var image, x, y, _ref, _results;
+    _results = [];
+    for (y = 0, _ref = this.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
+      _results.push((function() {
+        var _ref2, _results2;
+        _results2 = [];
+        for (x = 0, _ref2 = this.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
+          image = this.images[this.getTile(x, y)];
+          _results2.push(this.drawTile({
+            x: x,
+            y: y
+          }, canvas, offset, zoom, image));
         }
-        xPos = (x * 150) / zoom + offset.x;
-        yPos = (y * 200 + hexOffsetY) / zoom + offset.y;
-        image = this.images[this.getTile(x, y)];
-        image = Filters.invert(image);
-        _results.push(context.drawImage(image, 0, 0, image.width, image.height, xPos, yPos, image.width / zoom, image.height / zoom));
+        return _results2;
+      }).call(this));
+    }
+    return _results;
+  };
+
+  Map.prototype.drawSpecials = function(canvas, offset, zoom) {
+    var image;
+    if (this.selected) {
+      if (this.unitOnTile(this.selected.x, this.selected.y)) {
+        if (this.hovered) {
+          image = this.images[this.getTile(this.hovered.x, this.hovered.y)];
+          image = Filters.brighten(image);
+          return this.drawTile(this.hovered, canvas, offset, zoom, image);
+        }
+      } else {
+        image = this.images[this.getTile(this.selected.x, this.selected.y)];
+        image = Filters.brighten(image);
+        return this.drawTile(this.selected, canvas, offset, zoom, image);
       }
-      return _results;
     }
   };
 
@@ -204,6 +212,7 @@ Map = (function() {
   Map.prototype.draw = function(canvas, offset, zoom) {
     this.drawBackground(canvas);
     this.drawTiles(canvas, offset, zoom);
+    this.drawSpecials(canvas, offset, zoom);
     return this.drawUnits(canvas, offset, zoom);
   };
 
