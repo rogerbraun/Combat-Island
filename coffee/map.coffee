@@ -60,12 +60,41 @@ class Map
   hover: (targetX, targetY, offset, zoom) ->
     @hovered = @canvasPosToMapPos targetX, targetY, offset, zoom
 
+  neighbours: (pos) ->
+    x = pos.x
+    y = pos.y
+
+    hexDiff = if x % 2 == 0 then -1 else 1
+
+    neighbours = [
+      # Above, Below
+      {x: x, y: y + 1},
+      {x: x, y: y - 1},
+
+      # Independent
+      {x: x - 1, y: y},
+      {x: x + 1, y: y},
+
+      # Dependent
+      {x: x + 1, y: y + hexDiff},
+      {x: x - 1, y: y + hexDiff}
+    ]
+
+    that = this
+
+    neighbours = neighbours.filter (neighbour) ->
+      neighbour.x >= 0 && neighbour.y >= 0 && neighbour.x < that.width && neighbour.y < that.height
+
+    neighbours
+
   drawTiles: (canvas, offset, zoom) ->
     context = canvas.getContext '2d'
 
     for y in [0...@height]
       for x in [0...@width]
         image = @images[@getTile(x, y)]
+
+        # Tiles are offset because of the hexagonal grid
         if image
           if x % 2 == 1
             hexOffsetY = 100
@@ -84,6 +113,28 @@ class Map
             image = Filters.brighten(image)
 
           context.drawImage image, 0, 0, image.width, image.height, xPos , yPos, image.width / zoom, image.height / zoom
+    #
+    # Invert neighbours of selected
+    if @selected
+      neighbours = @neighbours @selected
+      for neighbour in neighbours
+        x = neighbour.x
+        y = neighbour.y
+
+        if x % 2 == 1
+          hexOffsetY = 100
+        else
+          hexOffsetY = 0
+
+        xPos = (x * 150) / zoom + offset.x
+        yPos = (y * 200 + hexOffsetY) / zoom + offset.y
+
+        image = @images[@getTile(x, y)]
+
+        image = Filters.invert(image)
+        context.drawImage image, 0, 0, image.width, image.height, xPos , yPos, image.width / zoom, image.height / zoom
+
+           
 
   moveUnit: (from, to) ->
     for unit in @units
