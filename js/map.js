@@ -87,16 +87,7 @@ Map = (function() {
     return res;
   };
   Map.prototype.inPossibleMoves = function(destination) {
-    var move, res, _i, _len, _ref;
-    res = false;
-    _ref = this.currentPossibleMoves;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      move = _ref[_i];
-      if (move.x === destination.x && move.y === destination.y) {
-        return true;
-      }
-    }
-    return res;
+    return this.currentPossibleMoves[[destination.x, destination.y]];
   };
   Map.prototype.select = function(targetX, targetY, offset, zoom) {
     var old_selected, unit;
@@ -223,7 +214,14 @@ Map = (function() {
     return unit.move(to, this.getTile(to.x, to.y));
   };
   Map.prototype.possibleMoves = function(unit) {
-    return this.possibleMovesHelper(unit, unit.moves - 1, this.neighbours(unit.pos));
+    var move, obj, res, _i, _len;
+    res = this.possibleMovesHelper(unit, unit.moves - 1, this.neighbours(unit.pos));
+    obj = {};
+    for (_i = 0, _len = res.length; _i < _len; _i++) {
+      move = res[_i];
+      obj[[move.x, move.y]] = true;
+    }
+    return obj;
   };
   Map.prototype.possibleMovesHelper = function(unit, movesLeft, neighbours, visited) {
     var neighbour, next_neighbours, res, that, _i, _len;

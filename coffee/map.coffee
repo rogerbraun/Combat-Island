@@ -64,11 +64,7 @@ class Map
 
 
   inPossibleMoves: (destination) ->  
-    res = false
-    for move in @currentPossibleMoves
-      if move.x == destination.x && move.y == destination.y
-        return true
-    res
+    @currentPossibleMoves[[destination.x, destination.y]]
 
   select: (targetX, targetY, offset, zoom) ->
     old_selected = @selected
@@ -160,7 +156,12 @@ class Map
     unit.move(to, @getTile(to.x, to.y))
 
   possibleMoves: (unit) ->
-    @possibleMovesHelper unit, unit.moves - 1, @neighbours(unit.pos)
+    res = @possibleMovesHelper unit, unit.moves - 1, @neighbours(unit.pos)
+    obj = {}
+    for move in res
+      obj[[move.x, move.y]] = true
+    obj
+       
 
   possibleMovesHelper: (unit, movesLeft, neighbours, visited) ->
     that = this
