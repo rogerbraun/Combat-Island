@@ -75,7 +75,7 @@ Game = (function() {
       var oldzoom;
       console.log("Zooming...");
       oldzoom = that.zoom;
-      if (event.wheelDelta < 0) {
+      if (event.wheelDelta > 0) {
         that.zoom = Math.max(1, that.zoom - 1);
       } else {
         that.zoom = Math.min(5, that.zoom + 1);
