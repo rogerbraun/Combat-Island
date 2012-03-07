@@ -2,10 +2,10 @@ level1 = new Map(30,30)
 
 level_str = """
             wwwwwwwwwwwwwwwwwwwwwwwwwwwwww
-            wwwwwwwwwwwwwgggwwwwwwwwwwwwww
-            wwwwwwwwwggggggggwwwwwwwwwwwww
-            wwwwwwwwgfgggggggwwwwwwwwwwwww
-            wwwwwwwgffffgggggwwwwwwwwwwwww
+            wwggwwwwwwwwwgggwwwwwwwwwwwwww
+            wwwggwwwwggggggggwwwwwwwwwwwww
+            wwwgggwwgfgggggggwwwwwwwwwwwww
+            wwwwggggffffgggggwwwwwwwwwwwww
             wwwwwwggfffffgggggwwwwwwwwwwww
             wwwwwgfffffgggggggwwwwwwwwwwww
             wwwwwggffffffgggggwwwwwwwwwwww
@@ -42,7 +42,11 @@ level1.setImage 'f', 'images/forest-tile.png'
 tank = new Unit('images/tank-unit.png')
 tank.setPosition(7, 7)
 
+tank2 = new Unit('images/tank-unit.png')
+tank2.setPosition(3, 3)
+
 level1.units.push(tank)
+level1.units.push(tank2)
 
 
 window.onload = () ->
