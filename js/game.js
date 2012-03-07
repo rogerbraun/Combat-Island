@@ -1,5 +1,4 @@
 var Game, black_screen;
-
 black_screen = {
   draw: function(canvas) {
     var context;
@@ -8,11 +7,10 @@ black_screen = {
     return context.fillRect(0, 0, canvas.width, canvas.height);
   }
 };
-
 Game = (function() {
-
   function Game(canvas) {
     this.canvas = canvas;
+    this.buffer = document.createElement('canvas');
     this.map = black_screen;
     this.offset = {
       x: 0,
@@ -20,11 +18,16 @@ Game = (function() {
     };
     this.zoom = 2;
   }
-
   Game.prototype.draw = function() {
-    return this.map.draw(this.canvas, this.offset, this.zoom);
+    var context, that;
+    this.map.draw(this.buffer, this.offset, this.zoom);
+    context = this.canvas.getContext('2d');
+    context.drawImage(this.buffer, 0, 0);
+    that = this;
+    return window.webkitRequestAnimationFrame(function() {
+      return that.draw();
+    });
   };
-
   Game.prototype.register_handlers = function() {
     var dragging, dragpos, that;
     console.log("Registering Handlers...");
@@ -38,7 +41,6 @@ Game = (function() {
       return false;
     };
     this.canvas.onmousedown = function(event) {
-      var old_selected;
       console.log(event);
       if (event.which === 3) {
         dragging = true;
@@ -48,14 +50,7 @@ Game = (function() {
         };
       }
       if (event.which === 1) {
-        old_selected = that.map.selected;
-        that.map.select(event.clientX, event.clientY, that.offset, that.zoom);
-        if (that.map.unitOnTile(old_selected.x, old_selected.y) && !that.map.unitOnTile(that.map.selected.x, that.map.selected.y)) {
-          console.log("Moving unit...");
-          that.map.moveUnit(old_selected, that.map.selected);
-          that.map.selected = false;
-        }
-        return that.draw();
+        return that.map.select(event.clientX, event.clientY, that.offset, that.zoom);
       }
     };
     this.canvas.onmouseup = function(event) {
@@ -68,8 +63,7 @@ Game = (function() {
         dragpos.x = event.clientX;
         dragpos.y = event.clientY;
       }
-      that.map.hover(event.clientX, event.clientY, that.offset, that.zoom);
-      return that.draw();
+      return that.map.hover(event.clientX, event.clientY, that.offset, that.zoom);
     };
     return this.canvas.onmousewheel = function(event) {
       var oldzoom;
@@ -81,24 +75,21 @@ Game = (function() {
         that.zoom = Math.min(5, that.zoom + 1);
       }
       that.offset.x *= oldzoom / that.zoom;
-      that.offset.y *= oldzoom / that.zoom;
-      return that.draw();
+      return that.offset.y *= oldzoom / that.zoom;
     };
   };
-
   Game.prototype.fullWindow = function() {
     console.log("Resizing canvas...");
     this.canvas.width = document.body.clientWidth;
-    return this.canvas.height = document.body.clientHeight;
+    this.canvas.height = document.body.clientHeight;
+    this.buffer.width = canvas.width;
+    return this.buffer.height = canvas.height;
   };
-
   Game.prototype.start = function() {
     console.log("Starting the game...");
     this.register_handlers();
     this.fullWindow();
     return this.draw();
   };
-
   return Game;
-
 })();

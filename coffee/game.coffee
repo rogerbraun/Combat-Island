@@ -7,6 +7,7 @@ black_screen =
 class Game
   constructor: (canvas) ->
     @canvas = canvas
+    @buffer = document.createElement 'canvas'
     @map = black_screen
     @offset =
       x: 0
@@ -14,7 +15,13 @@ class Game
     @zoom = 2
 
   draw: () ->
-    @map.draw(@canvas, @offset, @zoom)
+    @map.draw(@buffer, @offset, @zoom)
+    context = @canvas.getContext '2d'
+    context.drawImage @buffer, 0 , 0
+    
+    that = this
+    window.webkitRequestAnimationFrame () ->
+      that.draw()
    
   register_handlers: () ->
     console.log "Registering Handlers..."
@@ -39,18 +46,7 @@ class Game
 
       # Left Click
       if event.which == 1
-        old_selected = that.map.selected
-
         that.map.select(event.clientX, event.clientY, that.offset, that.zoom)
-
-        # Move units if previous click was on unit and new one is on empty tile
-        if that.map.unitOnTile(old_selected.x, old_selected.y) && !that.map.unitOnTile(that.map.selected.x, that.map.selected.y)
-          console.log("Moving unit...")
-          that.map.moveUnit(old_selected, that.map.selected)
-          # deselect
-          that.map.selected = false
-
-        that.draw()
 
     @canvas.onmouseup = (event) ->
       dragging = false
@@ -63,7 +59,6 @@ class Game
         dragpos.y = event.clientY
 
       that.map.hover(event.clientX, event.clientY, that.offset, that.zoom)
-      that.draw()
 
     @canvas.onmousewheel = (event) ->
       console.log("Zooming...")
@@ -74,12 +69,13 @@ class Game
         that.zoom = Math.min 5, that.zoom + 1
       that.offset.x *= (oldzoom / that.zoom)
       that.offset.y *= (oldzoom / that.zoom)
-      that.draw()
 
   fullWindow: () ->
     console.log "Resizing canvas..."
     @canvas.width = document.body.clientWidth
     @canvas.height = document.body.clientHeight
+    @buffer.width = canvas.width
+    @buffer.height = canvas.height
 
   start: () ->
     console.log("Starting the game...")

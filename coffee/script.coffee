@@ -45,8 +45,11 @@ tank.setPosition(7, 7)
 tank2 = new Unit('images/tank-unit.png')
 tank2.setPosition(3, 3)
 
+sub = new Submarine
+
 level1.units.push(tank)
 level1.units.push(tank2)
+level1.units.push(sub)
 
 
 window.onload = () ->

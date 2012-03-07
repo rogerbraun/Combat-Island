@@ -1,17 +1,16 @@
 var Map;
-
 Array.prototype.uniq = function() {
   var el, res, _i, _len;
   res = [];
   for (_i = 0, _len = this.length; _i < _len; _i++) {
     el = this[_i];
-    if (res.indexOf(el) === -1) res.push(el);
+    if (res.indexOf(el) === -1) {
+      res.push(el);
+    }
   }
   return res;
 };
-
 Map = (function() {
-
   function Map(width, height) {
     this.width = width;
     this.height = height;
@@ -20,24 +19,21 @@ Map = (function() {
     this.units = [];
     this.selected = false;
     this.hovered = false;
-    this.invertedCache = {};
+    this.imageCache = {};
+    this.currentPossibleMoves = false;
   }
-
   Map.prototype.getTile = function(x, y) {
     return this.tiles[x + y * this.width];
   };
-
   Map.prototype.setTile = function(x, y, element) {
     return this.tiles[x + y * this.width] = element;
   };
-
   Map.prototype.setImage = function(letter, src) {
     var image;
     image = new Image;
     image.src = src;
     return this.images[letter] = image;
   };
-
   Map.prototype.loadFromString = function(string) {
     var element, elements, line, lines, x, y, _len, _results;
     lines = string.split('\n');
@@ -57,14 +53,12 @@ Map = (function() {
     }
     return _results;
   };
-
   Map.prototype.drawBackground = function(canvas) {
     var context;
     context = canvas.getContext('2d');
     context.fillStyle = 'black';
     return context.fillRect(0, 0, canvas.width, canvas.height);
   };
-
   Map.prototype.canvasPosToMapPos = function(targetX, targetY, offset, zoom) {
     var hexOffsetY, image, res, x, xPos, y, yPos, _ref, _ref2;
     res = false;
@@ -92,15 +86,39 @@ Map = (function() {
     }
     return res;
   };
-
-  Map.prototype.select = function(targetX, targetY, offset, zoom) {
-    return this.selected = this.canvasPosToMapPos(targetX, targetY, offset, zoom);
+  Map.prototype.inPossibleMoves = function(destination) {
+    var move, res, _i, _len, _ref;
+    res = false;
+    _ref = this.currentPossibleMoves;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      move = _ref[_i];
+      if (move.x === destination.x && move.y === destination.y) {
+        return true;
+      }
+    }
+    return res;
   };
-
+  Map.prototype.select = function(targetX, targetY, offset, zoom) {
+    var old_selected, unit;
+    old_selected = this.selected;
+    this.selected = this.canvasPosToMapPos(targetX, targetY, offset, zoom);
+    if (this.unitOnTile(old_selected.x, old_selected.y)) {
+      unit = this.getUnit(old_selected);
+      if (this.inPossibleMoves(this.selected)) {
+        this.moveUnit(old_selected, this.selected);
+        this.selected = false;
+      }
+    }
+    if (this.unitOnTile(this.selected.x, this.selected.y)) {
+      unit = this.getUnit(this.selected);
+      return this.currentPossibleMoves = this.possibleMoves(unit);
+    } else {
+      return this.currentPossibleMoves = false;
+    }
+  };
   Map.prototype.hover = function(targetX, targetY, offset, zoom) {
     return this.hovered = this.canvasPosToMapPos(targetX, targetY, offset, zoom);
   };
-
   Map.prototype.neighbours = function(pos) {
     var hexDiff, neighbours, that, x, y;
     x = pos.x;
@@ -133,12 +151,10 @@ Map = (function() {
     });
     return neighbours;
   };
-
-  Map.prototype.drawTile = function(pos, canvas, offset, zoom, image) {
-    var context, hexOffsetY, x, xPos, y, yPos;
+  Map.prototype.drawTile = function(pos, canvas, context, offset, zoom, image) {
+    var hexOffsetY, x, xPos, y, yPos;
     x = pos.x;
     y = pos.y;
-    context = canvas.getContext('2d');
     if (image) {
       if (x % 2 === 1) {
         hexOffsetY = 100;
@@ -150,83 +166,70 @@ Map = (function() {
       return context.drawImage(image, 0, 0, image.width, image.height, xPos, yPos, image.width / zoom, image.height / zoom);
     }
   };
-
   Map.prototype.drawTiles = function(canvas, offset, zoom) {
-    var image, x, y, _ref, _results;
+    var context, image, x, y, _ref, _results;
+    context = canvas.getContext('2d');
     _results = [];
     for (y = 0, _ref = this.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
       _results.push((function() {
         var _ref2, _results2;
         _results2 = [];
         for (x = 0, _ref2 = this.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
-          image = this.images[this.getTile(x, y)];
+          image = this.getTileImage({
+            x: x,
+            y: y
+          });
           _results2.push(this.drawTile({
             x: x,
             y: y
-          }, canvas, offset, zoom, image));
+          }, canvas, context, offset, zoom, image));
         }
         return _results2;
       }).call(this));
     }
     return _results;
   };
-
-  Map.prototype.drawSpecials = function(canvas, offset, zoom) {
-    var image, move, moves, unit, _i, _len, _results;
-    if (this.selected) {
-      if (this.unitOnTile(this.selected.x, this.selected.y)) {
-        if (this.hovered) {
-          image = this.images[this.getTile(this.hovered.x, this.hovered.y)];
-          image = Filters.brighten(image);
-          this.drawTile(this.hovered, canvas, offset, zoom, image);
-        }
-        unit = this.getUnit(this.selected);
-        moves = this.possibleMoves(unit);
-        _results = [];
-        for (_i = 0, _len = moves.length; _i < _len; _i++) {
-          move = moves[_i];
-          if (this.invertedCache[this.getTile(move.x, move.y)]) {
-            image = this.invertedCache[this.getTile(move.x, move.y)];
-          } else {
-            image = this.images[this.getTile(move.x, move.y)];
-            image = Filters.invert(image);
-            this.invertedCache[this.getTile(move.x, move.y)] = image;
-          }
-          _results.push(this.drawTile(move, canvas, offset, zoom, image));
-        }
-        return _results;
-      } else {
-        image = this.images[this.getTile(this.selected.x, this.selected.y)];
-        image = Filters.brighten(image);
-        return this.drawTile(this.selected, canvas, offset, zoom, image);
+  Map.prototype.getTileImage = function(pos) {
+    var image;
+    image = this.images[this.getTile(pos.x, pos.y)];
+    if (this.hovered.x === pos.x && this.hovered.y === pos.y) {
+      if (!this.imageCache[["brightened", this.getTile(pos.x, pos.y)]]) {
+        this.imageCache[["brightened", this.getTile(pos.x, pos.y)]] = Filters.brighten(image);
       }
+      image = this.imageCache[["brightened", this.getTile(pos.x, pos.y)]];
     }
+    if (this.inPossibleMoves(pos)) {
+      if (!this.imageCache[["inverted", this.getTile(pos.x, pos.y)]]) {
+        image = Filters.invert(image);
+        this.imageCache[["inverted", this.getTile(pos.x, pos.y)]] = image;
+      }
+      image = this.imageCache[["inverted", this.getTile(pos.x, pos.y)]];
+    }
+    return image;
   };
-
   Map.prototype.getUnit = function(pos) {
     var unit, _i, _len, _ref;
     _ref = this.units;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       unit = _ref[_i];
-      if (unit.pos.x === pos.x && unit.pos.y === pos.y) return unit;
+      if (unit.pos.x === pos.x && unit.pos.y === pos.y) {
+        return unit;
+      }
     }
   };
-
   Map.prototype.moveUnit = function(from, to) {
     var unit;
     unit = this.getUnit(from);
     return unit.move(to, this.getTile(to.x, to.y));
   };
-
   Map.prototype.possibleMoves = function(unit) {
     return this.possibleMovesHelper(unit, unit.moves - 1, this.neighbours(unit.pos));
   };
-
   Map.prototype.possibleMovesHelper = function(unit, movesLeft, neighbours, visited) {
     var neighbour, next_neighbours, res, that, _i, _len;
     that = this;
     neighbours = neighbours.filter(function(neighbour) {
-      return unit.canMoveTo(that.getTile(neighbour.x, neighbour.y));
+      return unit.canMoveTo(that.getTile(neighbour.x, neighbour.y)) && !that.unitOnTile(neighbour.x, neighbour.y);
     });
     if (movesLeft === 0) {
       return neighbours;
@@ -240,13 +243,11 @@ Map = (function() {
       return res.uniq();
     }
   };
-
   Map.prototype.unitOnTile = function(x, y) {
     return this.units.some(function(unit) {
       return unit.pos.x === x && unit.pos.y === y;
     });
   };
-
   Map.prototype.drawUnits = function(canvas, offset, zoom) {
     var unit, _i, _len, _ref, _results;
     _ref = this.units;
@@ -257,14 +258,10 @@ Map = (function() {
     }
     return _results;
   };
-
   Map.prototype.draw = function(canvas, offset, zoom) {
     this.drawBackground(canvas);
     this.drawTiles(canvas, offset, zoom);
-    this.drawSpecials(canvas, offset, zoom);
     return this.drawUnits(canvas, offset, zoom);
   };
-
   return Map;
-
 })();

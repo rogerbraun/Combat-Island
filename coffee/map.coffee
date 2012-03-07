@@ -14,7 +14,8 @@ class Map
     @units = []
     @selected = false
     @hovered = false
-    @invertedCache = {}
+    @imageCache = {}
+    @currentPossibleMoves = false
 
   getTile: (x, y) ->
     @tiles[x + y * @width]
@@ -62,8 +63,26 @@ class Map
     res
 
 
+  inPossibleMoves: (destination) ->  
+    res = false
+    for move in @currentPossibleMoves
+      if move.x == destination.x && move.y == destination.y
+        return true
+    res
+
   select: (targetX, targetY, offset, zoom) ->
+    old_selected = @selected
     @selected = @canvasPosToMapPos targetX, targetY, offset, zoom
+    if @unitOnTile(old_selected.x, old_selected.y)
+      unit = @getUnit(old_selected)
+      if @inPossibleMoves(@selected)
+        @moveUnit old_selected, @selected
+        @selected = false
+    if @unitOnTile(@selected.x, @selected.y)
+      unit = @getUnit(@selected)
+      @currentPossibleMoves = @possibleMoves(unit)
+    else
+      @currentPossibleMoves = false
 
   hover: (targetX, targetY, offset, zoom) ->
     @hovered = @canvasPosToMapPos targetX, targetY, offset, zoom
@@ -95,10 +114,9 @@ class Map
 
     neighbours
 
-  drawTile: (pos, canvas, offset, zoom, image) ->
+  drawTile: (pos, canvas, context, offset, zoom, image) ->
     x = pos.x
     y = pos.y
-    context = canvas.getContext '2d'
 
     # Tiles are offset because of the hexagonal grid
     if image
@@ -113,33 +131,24 @@ class Map
       context.drawImage image, 0, 0, image.width, image.height, xPos , yPos, image.width / zoom, image.height / zoom
 
   drawTiles: (canvas, offset, zoom) ->
+    context = canvas.getContext '2d'
     for y in [0...@height]
       for x in [0...@width]
-        image = @images[@getTile(x, y)]
-        @drawTile({x: x, y: y}, canvas, offset, zoom, image)
+        image = @getTileImage {x: x, y: y}
+        @drawTile({x: x, y: y}, canvas, context, offset, zoom, image)
 
-  drawSpecials: (canvas, offset, zoom) ->
-
-    if @selected
-      if @unitOnTile(@selected.x, @selected.y)
-        if @hovered
-          image = @images[@getTile(@hovered.x, @hovered.y)]
-          image = Filters.brighten(image)
-          @drawTile(@hovered, canvas, offset, zoom, image)
-        unit = @getUnit @selected
-        moves = @possibleMoves unit
-        for move in moves
-          if @invertedCache[@getTile(move.x, move.y)]
-            image = @invertedCache[@getTile(move.x, move.y)]
-          else
-            image = @images[@getTile(move.x, move.y)]
-            image = Filters.invert(image)
-            @invertedCache[@getTile(move.x, move.y)] = image
-          @drawTile(move, canvas, offset, zoom, image)
-      else
-        image = @images[@getTile(@selected.x, @selected.y)]
-        image = Filters.brighten(image)
-        @drawTile(@selected, canvas, offset, zoom, image)
+  getTileImage: (pos) ->
+    image = @images[@getTile(pos.x, pos.y)]
+    if @hovered.x == pos.x && @hovered.y == pos.y
+      if !@imageCache[["brightened", @getTile(pos.x, pos.y)]]
+        @imageCache[["brightened", @getTile(pos.x, pos.y)]] = Filters.brighten(image)
+      image = @imageCache[["brightened", @getTile(pos.x, pos.y)]]
+    if @inPossibleMoves pos
+      if !@imageCache[["inverted", @getTile(pos.x, pos.y)]]
+        image = Filters.invert(image)
+        @imageCache[["inverted", @getTile(pos.x, pos.y)]] = image
+      image = @imageCache[["inverted", @getTile(pos.x, pos.y)]]
+    image
         
   getUnit: (pos) ->
     for unit in @units
@@ -156,7 +165,7 @@ class Map
   possibleMovesHelper: (unit, movesLeft, neighbours, visited) ->
     that = this
     neighbours = neighbours.filter (neighbour) ->
-      unit.canMoveTo(that.getTile(neighbour.x, neighbour.y))
+      unit.canMoveTo(that.getTile(neighbour.x, neighbour.y)) && !that.unitOnTile(neighbour.x, neighbour.y)
 
     if movesLeft == 0
       neighbours
@@ -178,6 +187,5 @@ class Map
   draw: (canvas, offset, zoom) ->
     @drawBackground canvas
     @drawTiles canvas, offset, zoom
-    @drawSpecials canvas, offset, zoom
     @drawUnits canvas, offset, zoom
 
