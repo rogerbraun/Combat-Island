@@ -7,34 +7,9 @@ black_screen =
 class Game
   constructor: (canvas) ->
     @canvas = canvas
-    @buffer = document.createElement 'canvas'
     @map = black_screen
-    @offset =
-      x: 0
-      y: 0
-    @zoom = 2
-    window.requestAnimationFrame = window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame
-    @frame = 0
-    @fps = 0
+    @renderer = new CanvasRenderer(@map, @canvas)
 
-  setFPS: () ->
-    that = this
-    setInterval () ->
-      that.fps = that.frame
-      that.frame = 0
-    , 1000
-
-  draw: () ->
-    @map.draw(@buffer, @offset, @zoom)
-    context = @canvas.getContext '2d'
-    @frame += 1
-    that = this
-    requestAnimationFrame () ->
-      context.drawImage that.buffer, 0 , 0
-      context.fillStyle = 'white'
-      context.fillText("FPS: #{that.fps}", 10, 10)
-      that.draw()
-   
   register_handlers: () ->
     console.log "Registering Handlers..."
     dragging = false
@@ -58,40 +33,37 @@ class Game
 
       # Left Click
       if event.which == 1
-        that.map.select(event.clientX, event.clientY, that.offset, that.zoom)
+        that.map.select(event.clientX, event.clientY, that.renderer.offset, that.renderer.zoom)
 
     @canvas.onmouseup = (event) ->
       dragging = false
 
     @canvas.onmousemove = (event) ->
       if dragging
-        that.offset.x += event.clientX - dragpos.x
-        that.offset.y += event.clientY - dragpos.y
+        that.renderer.offset.x += event.clientX - dragpos.x
+        that.renderer.offset.y += event.clientY - dragpos.y
         dragpos.x = event.clientX
         dragpos.y = event.clientY
 
-      that.map.hover(event.clientX, event.clientY, that.offset, that.zoom)
+      that.map.hover(event.clientX, event.clientY, that.renderer.offset, that.renderer.zoom)
 
     @canvas.onmousewheel = (event) ->
       console.log("Zooming...")
-      oldzoom = that.zoom
+      oldzoom = that.renderer.zoom
       if event.wheelDelta > 0
-        that.zoom = Math.max 1, that.zoom - 1
+        that.renderer.zoom = Math.max 1, that.renderer.zoom - 1
       else
-        that.zoom = Math.min 5, that.zoom + 1
-      that.offset.x *= (oldzoom / that.zoom)
-      that.offset.y *= (oldzoom / that.zoom)
+        that.renderer.zoom = Math.min 5, that.renderer.zoom + 1
+      that.renderer.offset.x *= (oldzoom / that.renderer.zoom)
+      that.renderer.offset.y *= (oldzoom / that.renderer.zoom)
 
   fullWindow: () ->
     console.log "Resizing canvas..."
     @canvas.width = document.body.clientWidth
     @canvas.height = document.body.clientHeight
-    @buffer.width = @canvas.width
-    @buffer.height = @canvas.height
 
   start: () ->
     console.log("Starting the game...")
     @register_handlers()
     @fullWindow()
-    @draw()
-    @setFPS()
+    @renderer.draw()
