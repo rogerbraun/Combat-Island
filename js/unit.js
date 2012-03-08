@@ -70,9 +70,8 @@ Unit = (function() {
     }
     return Filters.rotate(image, deg);
   };
-  Unit.prototype.draw = function(canvas, offset, zoom, selected) {
-    var context, hexOffsetY, image, x, xPos, y, yPos;
-    context = canvas.getContext('2d');
+  Unit.prototype.draw = function(canvas, context, offset, zoom, selected) {
+    var hexOffsetY, image, x, xPos, y, yPos;
     x = this.pos.x;
     y = this.pos.y;
     if (x % 2 === 1) {

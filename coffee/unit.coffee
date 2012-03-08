@@ -49,9 +49,7 @@ class Unit
 
     Filters.rotate(image, deg)
 
-  draw: (canvas, offset, zoom, selected) ->
-    context = canvas.getContext '2d'
-
+  draw: (canvas, context, offset, zoom, selected) ->
     x = @pos.x
     y = @pos.y
 

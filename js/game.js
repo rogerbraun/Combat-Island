@@ -17,14 +17,28 @@ Game = (function() {
       y: 0
     };
     this.zoom = 2;
+    window.requestAnimationFrame = window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+    this.frame = 0;
+    this.fps = 0;
   }
+  Game.prototype.setFPS = function() {
+    var that;
+    that = this;
+    return setInterval(function() {
+      that.fps = that.frame;
+      return that.frame = 0;
+    }, 1000);
+  };
   Game.prototype.draw = function() {
     var context, that;
     this.map.draw(this.buffer, this.offset, this.zoom);
     context = this.canvas.getContext('2d');
-    context.drawImage(this.buffer, 0, 0);
+    this.frame += 1;
     that = this;
-    return window.webkitRequestAnimationFrame(function() {
+    return requestAnimationFrame(function() {
+      context.drawImage(that.buffer, 0, 0);
+      context.fillStyle = 'white';
+      context.fillText("FPS: " + that.fps, 10, 10);
       return that.draw();
     });
   };
@@ -82,14 +96,15 @@ Game = (function() {
     console.log("Resizing canvas...");
     this.canvas.width = document.body.clientWidth;
     this.canvas.height = document.body.clientHeight;
-    this.buffer.width = canvas.width;
-    return this.buffer.height = canvas.height;
+    this.buffer.width = this.canvas.width;
+    return this.buffer.height = this.canvas.height;
   };
   Game.prototype.start = function() {
     console.log("Starting the game...");
     this.register_handlers();
     this.fullWindow();
-    return this.draw();
+    this.draw();
+    return this.setFPS();
   };
   return Game;
 })();

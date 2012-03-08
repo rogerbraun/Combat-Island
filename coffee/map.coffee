@@ -64,7 +64,11 @@ class Map
 
 
   inPossibleMoves: (destination) ->  
-    @currentPossibleMoves[[destination.x, destination.y]]
+    for move in @currentPossibleMoves
+      if move.x == destination.x && move.y == destination.y
+        return true
+    return false
+
 
   select: (targetX, targetY, offset, zoom) ->
     old_selected = @selected
@@ -123,28 +127,55 @@ class Map
 
       xPos = (x * 150) / zoom + offset.x
       yPos = (y * 200 + hexOffsetY) / zoom + offset.y
+      width = image.width / zoom
+      height = image.height / zoom
+     
+      xPos = Math.round(xPos)
+      yPos = Math.round(yPos)
+      width = Math.round(width)
+      height = Math.round(height)
 
-      context.drawImage image, 0, 0, image.width, image.height, xPos , yPos, image.width / zoom, image.height / zoom
+      context.drawImage image, 0, 0, image.width, image.height, xPos , yPos, width, height
 
-  drawTiles: (canvas, offset, zoom) ->
-    context = canvas.getContext '2d'
+  drawTiles: (canvas, context, offset, zoom) ->
     for y in [0...@height]
       for x in [0...@width]
         image = @getTileImage {x: x, y: y}
-        @drawTile({x: x, y: y}, canvas, context, offset, zoom, image)
+        #@drawTile({x: x, y: y}, canvas, context, offset, zoom, image)
+        # Much faster this way. Let's find out why.
+        if image
+          if x % 2 == 1
+            hexOffsetY = 100
+          else
+            hexOffsetY = 0
+          width = image.width / zoom
+          height = image.height / zoom
+
+          xPos = (x * 150) / zoom + offset.x
+          yPos = (y * 200 + hexOffsetY) / zoom + offset.y
+          context.drawImage image, 0, 0, image.width, image.height, xPos , yPos, width, height
+
+  drawSpecials: (canvas, context, offset, zoom) ->
+    if @hovered
+      if !@imageCache[["brightened", @getTile(@hovered.x, @hovered.y)]]
+        image = @getTileImage @hovered
+        @imageCache[["brightened", @getTile(@hovered.x, @hovered.y)]] = Filters.brighten(image)
+      image = @imageCache[["brightened", @getTile(@hovered.x, @hovered.y)]]
+      @drawTile @hovered, canvas, context, offset, zoom, image
+    if @currentPossibleMoves
+      for pos in @currentPossibleMoves
+        if !@imageCache[["inverted", @getTile(pos.x, pos.y)]]
+          image = Filters.invert(image)
+          @imageCache[["inverted", @getTile(pos.x, pos.y)]] = image
+        image = @imageCache[["inverted", @getTile(pos.x, pos.y)]]
+        @drawTile pos, canvas, context, offset, zoom, image
+
+
+    #if @inPossibleMoves pos
+    #image
 
   getTileImage: (pos) ->
     image = @images[@getTile(pos.x, pos.y)]
-    if @hovered.x == pos.x && @hovered.y == pos.y
-      if !@imageCache[["brightened", @getTile(pos.x, pos.y)]]
-        @imageCache[["brightened", @getTile(pos.x, pos.y)]] = Filters.brighten(image)
-      image = @imageCache[["brightened", @getTile(pos.x, pos.y)]]
-    if @inPossibleMoves pos
-      if !@imageCache[["inverted", @getTile(pos.x, pos.y)]]
-        image = Filters.invert(image)
-        @imageCache[["inverted", @getTile(pos.x, pos.y)]] = image
-      image = @imageCache[["inverted", @getTile(pos.x, pos.y)]]
-    image
         
   getUnit: (pos) ->
     for unit in @units
@@ -156,12 +187,7 @@ class Map
     unit.move(to, @getTile(to.x, to.y))
 
   possibleMoves: (unit) ->
-    res = @possibleMovesHelper unit, unit.moves - 1, @neighbours(unit.pos)
-    obj = {}
-    for move in res
-      obj[[move.x, move.y]] = true
-    obj
-       
+    @possibleMovesHelper unit, unit.moves - 1, @neighbours(unit.pos)
 
   possibleMovesHelper: (unit, movesLeft, neighbours, visited) ->
     that = this
@@ -181,12 +207,14 @@ class Map
     @units.some (unit) ->
       unit.pos.x == x && unit.pos.y == y
       
-  drawUnits: (canvas, offset, zoom) ->
+  drawUnits: (canvas, context, offset, zoom) ->
     for unit in @units
-      unit.draw canvas, offset, zoom, @selected
+      unit.draw canvas, context, offset, zoom, @selected
 
   draw: (canvas, offset, zoom) ->
+    context = canvas.getContext '2d'
     @drawBackground canvas
-    @drawTiles canvas, offset, zoom
-    @drawUnits canvas, offset, zoom
+    @drawTiles canvas, context, offset, zoom
+    @drawSpecials canvas, context, offset, zoom
+    @drawUnits canvas, context, offset, zoom
 

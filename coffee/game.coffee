@@ -13,14 +13,26 @@ class Game
       x: 0
       y: 0
     @zoom = 2
+    window.requestAnimationFrame = window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame
+    @frame = 0
+    @fps = 0
+
+  setFPS: () ->
+    that = this
+    setInterval () ->
+      that.fps = that.frame
+      that.frame = 0
+    , 1000
 
   draw: () ->
     @map.draw(@buffer, @offset, @zoom)
     context = @canvas.getContext '2d'
-    context.drawImage @buffer, 0 , 0
-    
+    @frame += 1
     that = this
-    window.webkitRequestAnimationFrame () ->
+    requestAnimationFrame () ->
+      context.drawImage that.buffer, 0 , 0
+      context.fillStyle = 'white'
+      context.fillText("FPS: #{that.fps}", 10, 10)
       that.draw()
    
   register_handlers: () ->
@@ -74,11 +86,12 @@ class Game
     console.log "Resizing canvas..."
     @canvas.width = document.body.clientWidth
     @canvas.height = document.body.clientHeight
-    @buffer.width = canvas.width
-    @buffer.height = canvas.height
+    @buffer.width = @canvas.width
+    @buffer.height = @canvas.height
 
   start: () ->
     console.log("Starting the game...")
     @register_handlers()
     @fullWindow()
     @draw()
+    @setFPS()
