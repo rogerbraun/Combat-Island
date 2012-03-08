@@ -1,7 +1,5 @@
 var CanvasRenderer;
-
 CanvasRenderer = (function() {
-
   function CanvasRenderer(map, canvas) {
     var that;
     this.map = map;
@@ -21,17 +19,14 @@ CanvasRenderer = (function() {
     }, 1000);
     window.requestAnimationFrame || (window.requestAnimationFrame = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame);
   }
-
   CanvasRenderer.prototype.drawBackground = function() {
     this.context.fillStyle = 'black';
     return this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
   };
-
   CanvasRenderer.prototype.drawFps = function() {
     this.context.fillStyle = 'white';
     return this.context.fillText("FPS: " + this.fps, 15, 15);
   };
-
   CanvasRenderer.prototype.drawTiles = function() {
     var image, x, y, _ref, _results;
     _results = [];
@@ -44,7 +39,7 @@ CanvasRenderer = (function() {
             x: x,
             y: y
           });
-          _results2.push(this.drawTile({
+          _results2.push(this.drawImage({
             x: x,
             y: y
           }, image));
@@ -54,8 +49,25 @@ CanvasRenderer = (function() {
     }
     return _results;
   };
-
-  CanvasRenderer.prototype.drawTile = function(pos, image) {
+  CanvasRenderer.prototype.drawUnits = function() {
+    var unit, _i, _len, _ref, _results;
+    _ref = this.map.units;
+    _results = [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      unit = _ref[_i];
+      _results.push(this.drawUnit(unit));
+    }
+    return _results;
+  };
+  CanvasRenderer.prototype.drawUnit = function(unit) {
+    var image;
+    image = unit.getCurrentImage();
+    if (this.map.selected.x === unit.pos.x && this.map.selected.y === unit.pos.y) {
+      image = Filters.brighten(image);
+    }
+    return this.drawImage(unit.pos, image);
+  };
+  CanvasRenderer.prototype.drawImage = function(pos, image) {
     var height, hexOffsetY, width, x, xPos, y, yPos;
     x = pos.x;
     y = pos.y;
@@ -64,29 +76,27 @@ CanvasRenderer = (function() {
     } else {
       hexOffsetY = 0;
     }
-    xPos = (x * 150) / zoom + offset.x;
-    yPos = (y * 200 + hexOffsetY) / zoom + offset.y;
-    width = image.width / zoom;
-    height = image.height / zoom;
+    xPos = (x * 150) / this.zoom + this.offset.x + ((200 - image.width) / this.zoom / 2);
+    yPos = (y * 200 + hexOffsetY) / this.zoom + this.offset.y + ((200 - image.height) / this.zoom / 2);
+    width = image.width / this.zoom;
+    height = image.height / this.zoom;
     xPos = Math.round(xPos);
     yPos = Math.round(yPos);
     width = Math.round(width);
     height = Math.round(height);
     return this.context.drawImage(image, 0, 0, image.width, image.height, xPos, yPos, width, height);
   };
-
   CanvasRenderer.prototype.draw = function() {
     var that;
     that = this;
     return window.requestAnimationFrame(function() {
       that.drawBackground();
       that.drawTiles();
+      that.drawUnits();
       that.drawFps();
       that.frames += 1;
       return that.draw();
     });
   };
-
   return CanvasRenderer;
-
 })();

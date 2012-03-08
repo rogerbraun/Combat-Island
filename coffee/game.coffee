@@ -10,6 +10,10 @@ class Game
     @map = black_screen
     @renderer = new CanvasRenderer(@map, @canvas)
 
+  changeMap: (map) ->
+    @map = map
+    @renderer.map = map
+
   register_handlers: () ->
     console.log "Registering Handlers..."
     dragging = false

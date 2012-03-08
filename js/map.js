@@ -53,12 +53,6 @@ Map = (function() {
     }
     return _results;
   };
-  Map.prototype.drawBackground = function(canvas) {
-    var context;
-    context = canvas.getContext('2d');
-    context.fillStyle = 'black';
-    return context.fillRect(0, 0, canvas.width, canvas.height);
-  };
   Map.prototype.canvasPosToMapPos = function(targetX, targetY, offset, zoom) {
     var hexOffsetY, image, res, x, xPos, y, yPos, _ref, _ref2;
     res = false;
@@ -150,71 +144,6 @@ Map = (function() {
     });
     return neighbours;
   };
-  Map.prototype.drawTile = function(pos, canvas, context, offset, zoom, image) {
-    var height, hexOffsetY, width, x, xPos, y, yPos;
-    x = pos.x;
-    y = pos.y;
-    if (image) {
-      if (x % 2 === 1) {
-        hexOffsetY = 100;
-      } else {
-        hexOffsetY = 0;
-      }
-      xPos = (x * 150) / zoom + offset.x;
-      yPos = (y * 200 + hexOffsetY) / zoom + offset.y;
-      width = image.width / zoom;
-      height = image.height / zoom;
-      xPos = Math.round(xPos);
-      yPos = Math.round(yPos);
-      width = Math.round(width);
-      height = Math.round(height);
-      return context.drawImage(image, 0, 0, image.width, image.height, xPos, yPos, width, height);
-    }
-  };
-  Map.prototype.drawTiles = function(canvas, context, offset, zoom) {
-    var height, hexOffsetY, image, width, x, xPos, y, yPos, _ref, _results;
-    _results = [];
-    for (y = 0, _ref = this.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
-      _results.push((function() {
-        var _ref2, _results2;
-        _results2 = [];
-        for (x = 0, _ref2 = this.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
-          image = this.getTileImage({
-            x: x,
-            y: y
-          });
-          _results2.push(image ? (x % 2 === 1 ? hexOffsetY = 100 : hexOffsetY = 0, width = image.width / zoom, height = image.height / zoom, xPos = (x * 150) / zoom + offset.x, yPos = (y * 200 + hexOffsetY) / zoom + offset.y, context.drawImage(image, 0, 0, image.width, image.height, xPos, yPos, width, height)) : void 0);
-        }
-        return _results2;
-      }).call(this));
-    }
-    return _results;
-  };
-  Map.prototype.drawSpecials = function(canvas, context, offset, zoom) {
-    var image, pos, _i, _len, _ref, _results;
-    if (this.hovered) {
-      if (!this.imageCache[["brightened", this.getTile(this.hovered.x, this.hovered.y)]]) {
-        image = this.getTileImage(this.hovered);
-        this.imageCache[["brightened", this.getTile(this.hovered.x, this.hovered.y)]] = Filters.brighten(image);
-      }
-      image = this.imageCache[["brightened", this.getTile(this.hovered.x, this.hovered.y)]];
-      this.drawTile(this.hovered, canvas, context, offset, zoom, image);
-    }
-    if (this.currentPossibleMoves) {
-      _ref = this.currentPossibleMoves;
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        pos = _ref[_i];
-        if (!this.imageCache[["inverted", this.getTile(pos.x, pos.y)]]) {
-          image = Filters.invert(image);
-          this.imageCache[["inverted", this.getTile(pos.x, pos.y)]] = image;
-        }
-        image = this.imageCache[["inverted", this.getTile(pos.x, pos.y)]];
-        _results.push(this.drawTile(pos, canvas, context, offset, zoom, image));
-      }
-      return _results;
-    }
-  };
   Map.prototype.getTileImage = function(pos) {
     var image;
     return image = this.images[this.getTile(pos.x, pos.y)];
@@ -259,24 +188,6 @@ Map = (function() {
     return this.units.some(function(unit) {
       return unit.pos.x === x && unit.pos.y === y;
     });
-  };
-  Map.prototype.drawUnits = function(canvas, context, offset, zoom) {
-    var unit, _i, _len, _ref, _results;
-    _ref = this.units;
-    _results = [];
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      unit = _ref[_i];
-      _results.push(unit.draw(canvas, context, offset, zoom, this.selected));
-    }
-    return _results;
-  };
-  Map.prototype.draw = function(canvas, offset, zoom) {
-    var context;
-    context = canvas.getContext('2d');
-    this.drawBackground(canvas);
-    this.drawTiles(canvas, context, offset, zoom);
-    this.drawSpecials(canvas, context, offset, zoom);
-    return this.drawUnits(canvas, context, offset, zoom);
   };
   return Map;
 })();

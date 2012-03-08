@@ -17,6 +17,6 @@ window.onload = function() {
   var canvas, game;
   canvas = document.getElementById('canvas');
   game = new Game(canvas);
-  game.map = level1;
+  game.changeMap(level1);
   return game.start();
 };

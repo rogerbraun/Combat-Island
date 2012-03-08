@@ -30,9 +30,19 @@ class CanvasRenderer
     for y in [0...@map.height]
       for x in [0...@map.width]
         image = @map.getTileImage {x: x, y: y}
-        @drawTile({x: x, y: y}, image)
+        @drawImage({x: x, y: y}, image)
 
-  drawTile: (pos, image) ->
+  drawUnits: () ->
+    for unit in @map.units
+      @drawUnit unit
+
+  drawUnit: (unit) ->
+    image = unit.getCurrentImage()
+    if @map.selected.x == unit.pos.x && @map.selected.y == unit.pos.y
+      image = Filters.brighten image
+    @drawImage(unit.pos, image)
+
+  drawImage: (pos, image) ->
     x = pos.x
     y = pos.y
 
@@ -41,10 +51,10 @@ class CanvasRenderer
     else
       hexOffsetY = 0
 
-    xPos = (x * 150) / zoom + offset.x
-    yPos = (y * 200 + hexOffsetY) / zoom + offset.y
-    width = image.width / zoom
-    height = image.height / zoom
+    xPos = (x * 150) / @zoom + @offset.x + ((200 - image.width) / @zoom / 2)
+    yPos = (y * 200 + hexOffsetY) / @zoom + @offset.y + ((200 - image.height) / @zoom / 2)
+    width = image.width / @zoom
+    height = image.height / @zoom
    
     xPos = Math.round(xPos)
     yPos = Math.round(yPos)
@@ -58,6 +68,7 @@ class CanvasRenderer
     window.requestAnimationFrame () ->
       that.drawBackground()
       that.drawTiles()
+      that.drawUnits()
       that.drawFps()
 
       that.frames += 1

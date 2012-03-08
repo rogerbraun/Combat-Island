@@ -10,6 +10,8 @@ Unit = (function() {
     this.direction = "n";
     this.canMoveOn = ["g", "f"];
     this.moves = 3;
+    this.imageCache = [];
+    this.brightCache = [];
   }
   Unit.prototype.setPosition = function(x, y) {
     this.pos.x = x;
@@ -46,46 +48,45 @@ Unit = (function() {
   };
   Unit.prototype.rotate = function(image) {
     var deg;
-    switch (this.direction) {
-      case "s":
-        deg = 0;
-        break;
-      case "sw":
-        deg = 60;
-        break;
-      case "nw":
-        deg = 120;
-        break;
-      case "n":
-        deg = 180;
-        break;
-      case "ne":
-        deg = 240;
-        break;
-      case "se":
-        deg = 300;
-        break;
-      default:
-        deg = 0;
+    if (!this.imageCache[this.direction]) {
+      switch (this.direction) {
+        case "s":
+          deg = 0;
+          break;
+        case "sw":
+          deg = 60;
+          break;
+        case "nw":
+          deg = 120;
+          break;
+        case "n":
+          deg = 180;
+          break;
+        case "ne":
+          deg = 240;
+          break;
+        case "se":
+          deg = 300;
+          break;
+        default:
+          deg = 0;
+      }
+      image = Filters.rotate(image, deg);
+      this.imageCache[this.direction] = image;
     }
-    return Filters.rotate(image, deg);
+    return this.imageCache[this.direction];
   };
-  Unit.prototype.draw = function(canvas, context, offset, zoom, selected) {
-    var hexOffsetY, image, x, xPos, y, yPos;
-    x = this.pos.x;
-    y = this.pos.y;
-    if (x % 2 === 1) {
-      hexOffsetY = 100;
-    } else {
-      hexOffsetY = 0;
-    }
-    image = this.rotate(this.image);
-    if (selected.x === x && selected.y === y) {
+  Unit.prototype.getCurrentImage = function() {
+    return this.rotate(this.image);
+  };
+  Unit.prototype.getBrightImage = function() {
+    var image;
+    if (!this.brightCache[this.direction]) {
+      image = getCurrentImage();
       image = Filters.brighten(image);
+      this.brightCache[this.direction] = image;
     }
-    xPos = (x * 150 + 50) / zoom + offset.x;
-    yPos = (y * 200 + hexOffsetY + 50) / zoom + offset.y;
-    return context.drawImage(image, 0, 0, image.width, image.height, xPos, yPos, image.width / zoom, image.height / zoom);
+    return this.brightCache[this.direction];
   };
   return Unit;
 })();

@@ -8,6 +8,8 @@ class Unit
     @direction = "n"
     @canMoveOn = ["g","f"]
     @moves = 3
+    @imageCache = []
+    @brightCache = []
 
   setPosition: (x, y) ->
     @pos.x = x
@@ -38,33 +40,27 @@ class Unit
     @direction = dir
 
   rotate: (image) ->
-    switch @direction
-      when "s" then deg = 0
-      when "sw" then deg = 60
-      when "nw" then deg = 120
-      when "n" then deg = 180
-      when "ne" then deg = 240
-      when "se" then deg = 300
-      else deg = 0
+    if !@imageCache[@direction]
+      switch @direction
+        when "s" then deg = 0
+        when "sw" then deg = 60
+        when "nw" then deg = 120
+        when "n" then deg = 180
+        when "ne" then deg = 240
+        when "se" then deg = 300
+        else deg = 0
 
-    Filters.rotate(image, deg)
+      image = Filters.rotate(image, deg)
+      @imageCache[@direction] = image
+    @imageCache[@direction]
 
-  draw: (canvas, context, offset, zoom, selected) ->
-    x = @pos.x
-    y = @pos.y
-
-    if x % 2 == 1
-      hexOffsetY = 100
-    else
-      hexOffsetY = 0
-
-    image = @rotate(@image)
-
-
-    if selected.x == x && selected.y == y
+  getCurrentImage: () ->
+    @rotate @image
+  
+  getBrightImage: () ->
+    if !@brightCache[@direction]
+      image = getCurrentImage()
       image = Filters.brighten(image)
+      @brightCache[@direction] = image
+    @brightCache[@direction]
 
-    xPos = (x * 150 + 50) / zoom + offset.x  
-    yPos = (y * 200 + hexOffsetY + 50) / zoom + offset.y 
-
-    context.drawImage image, 0, 0, image.width, image.height, xPos , yPos, image.width / zoom, image.height / zoom

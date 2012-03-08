@@ -55,5 +55,5 @@ level1.units.push(sub)
 window.onload = () ->
   canvas = document.getElementById 'canvas'
   game = new Game(canvas)
-  game.map = level1
+  game.changeMap level1
   game.start()
