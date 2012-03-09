@@ -8,6 +8,8 @@ class Unit
     @direction = "n"
     @canMoveOn = ["g","f"]
     @moves = 3
+    @maxHealth = 100
+    @currentHealth = 100
     @imageCache = []
     @brightCache = []
 
@@ -54,8 +56,16 @@ class Unit
       @imageCache[@direction] = image
     @imageCache[@direction]
 
+  addHealthBar: (canvas) ->
+    context = canvas.getContext '2d'
+    width = (@currentHealth / @maxHealth) * 80
+    context.fillStyle = "hsl(#{(width / 80) * 120},100%, 50%)"
+    context.fillRect 10, 10, width, 10
+    canvas
+
   getCurrentImage: () ->
-    @rotate @image
+    image = @rotate @image
+    @addHealthBar image
   
   getBrightImage: () ->
     if !@brightCache[@direction]

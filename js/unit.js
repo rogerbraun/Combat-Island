@@ -12,6 +12,8 @@ Unit = (function() {
     this.direction = "n";
     this.canMoveOn = ["g", "f"];
     this.moves = 3;
+    this.maxHealth = 100;
+    this.currentHealth = 100;
     this.imageCache = [];
     this.brightCache = [];
   }
@@ -80,8 +82,19 @@ Unit = (function() {
     return this.imageCache[this.direction];
   };
 
+  Unit.prototype.addHealthBar = function(canvas) {
+    var context, width;
+    context = canvas.getContext('2d');
+    width = (this.currentHealth / this.maxHealth) * 80;
+    context.fillStyle = "hsl(" + ((width / 80) * 120) + ",100%, 50%)";
+    context.fillRect(10, 10, width, 10);
+    return canvas;
+  };
+
   Unit.prototype.getCurrentImage = function() {
-    return this.rotate(this.image);
+    var image;
+    image = this.rotate(this.image);
+    return this.addHealthBar(image);
   };
 
   Unit.prototype.getBrightImage = function() {

@@ -42,11 +42,13 @@ level1.loadFromString level_str, images
 
 tank = new Unit('images/tank-unit.png')
 tank.setPosition(7, 7)
+tank.currentHealth = 50
 
 tank2 = new Unit('images/tank-unit.png')
 tank2.setPosition(3, 3)
 
 sub = new Submarine
+sub.currentHealth = 20
 
 level1.units.push(tank)
 level1.units.push(tank2)
