@@ -1,39 +1,56 @@
 var Map;
+
 Array.prototype.uniq = function() {
   var el, res, _i, _len;
   res = [];
   for (_i = 0, _len = this.length; _i < _len; _i++) {
     el = this[_i];
-    if (res.indexOf(el) === -1) {
-      res.push(el);
-    }
+    if (res.indexOf(el) === -1) res.push(el);
   }
   return res;
 };
+
 Map = (function() {
+
   function Map(width, height) {
     this.width = width;
     this.height = height;
     this.tiles = [];
     this.images = {};
+    this.brightImages = {};
+    this.invertedImages = {};
     this.units = [];
-    this.selected = false;
-    this.hovered = false;
-    this.imageCache = {};
+    this.selected = {
+      x: -1,
+      y: -1
+    };
+    this.hovered = {
+      x: -1,
+      y: -1
+    };
     this.currentPossibleMoves = false;
   }
+
   Map.prototype.getTile = function(x, y) {
     return this.tiles[x + y * this.width];
   };
+
   Map.prototype.setTile = function(x, y, element) {
     return this.tiles[x + y * this.width] = element;
   };
+
   Map.prototype.setImage = function(letter, src) {
-    var image;
+    var image, that;
     image = new Image;
     image.src = src;
-    return this.images[letter] = image;
+    this.images[letter] = image;
+    that = this;
+    return image.onload = function() {
+      that.brightImages[letter] = Filters.brighten(image);
+      return that.invertedImages[letter] = Filters.invert(image);
+    };
   };
+
   Map.prototype.loadFromString = function(string) {
     var element, elements, line, lines, x, y, _len, _results;
     lines = string.split('\n');
@@ -53,6 +70,7 @@ Map = (function() {
     }
     return _results;
   };
+
   Map.prototype.canvasPosToMapPos = function(targetX, targetY, offset, zoom) {
     var hexOffsetY, image, res, x, xPos, y, yPos, _ref, _ref2;
     res = false;
@@ -80,24 +98,24 @@ Map = (function() {
     }
     return res;
   };
-  Map.prototype.inPossibleMoves = function(destination) {
+
+  Map.prototype.inPossibleMoves = function(x, y) {
     var move, _i, _len, _ref;
     _ref = this.currentPossibleMoves;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       move = _ref[_i];
-      if (move.x === destination.x && move.y === destination.y) {
-        return true;
-      }
+      if (move.x === x && move.y === y) return true;
     }
     return false;
   };
+
   Map.prototype.select = function(targetX, targetY, offset, zoom) {
     var old_selected, unit;
     old_selected = this.selected;
     this.selected = this.canvasPosToMapPos(targetX, targetY, offset, zoom);
     if (this.unitOnTile(old_selected.x, old_selected.y)) {
       unit = this.getUnit(old_selected);
-      if (this.inPossibleMoves(this.selected)) {
+      if (this.inPossibleMoves(this.selected.x, this.selected.y)) {
         this.moveUnit(old_selected, this.selected);
         this.selected = false;
       }
@@ -109,9 +127,11 @@ Map = (function() {
       return this.currentPossibleMoves = false;
     }
   };
+
   Map.prototype.hover = function(targetX, targetY, offset, zoom) {
     return this.hovered = this.canvasPosToMapPos(targetX, targetY, offset, zoom);
   };
+
   Map.prototype.neighbours = function(pos) {
     var hexDiff, neighbours, that, x, y;
     x = pos.x;
@@ -144,28 +164,38 @@ Map = (function() {
     });
     return neighbours;
   };
-  Map.prototype.getTileImage = function(pos) {
-    var image;
-    return image = this.images[this.getTile(pos.x, pos.y)];
+
+  Map.prototype.getImage = function(pos) {
+    return this.images[this.getTile(pos.x, pos.y)];
   };
+
+  Map.prototype.getBrightImage = function(pos) {
+    return this.brightImages[this.getTile(pos.x, pos.y)];
+  };
+
+  Map.prototype.getInvertedImage = function(pos) {
+    return this.invertedImages[this.getTile(pos.x, pos.y)];
+  };
+
   Map.prototype.getUnit = function(pos) {
     var unit, _i, _len, _ref;
     _ref = this.units;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       unit = _ref[_i];
-      if (unit.pos.x === pos.x && unit.pos.y === pos.y) {
-        return unit;
-      }
+      if (unit.pos.x === pos.x && unit.pos.y === pos.y) return unit;
     }
   };
+
   Map.prototype.moveUnit = function(from, to) {
     var unit;
     unit = this.getUnit(from);
     return unit.move(to, this.getTile(to.x, to.y));
   };
+
   Map.prototype.possibleMoves = function(unit) {
     return this.possibleMovesHelper(unit, unit.moves - 1, this.neighbours(unit.pos));
   };
+
   Map.prototype.possibleMovesHelper = function(unit, movesLeft, neighbours, visited) {
     var neighbour, next_neighbours, res, that, _i, _len;
     that = this;
@@ -184,10 +214,13 @@ Map = (function() {
       return res.uniq();
     }
   };
+
   Map.prototype.unitOnTile = function(x, y) {
     return this.units.some(function(unit) {
       return unit.pos.x === x && unit.pos.y === y;
     });
   };
+
   return Map;
+
 })();

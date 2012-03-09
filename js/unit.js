@@ -1,5 +1,7 @@
 var Unit;
+
 Unit = (function() {
+
   function Unit(image_src) {
     this.image = new Image;
     this.image.src = image_src;
@@ -13,15 +15,18 @@ Unit = (function() {
     this.imageCache = [];
     this.brightCache = [];
   }
+
   Unit.prototype.setPosition = function(x, y) {
     this.pos.x = x;
     return this.pos.y = y;
   };
+
   Unit.prototype.canMoveTo = function(tile) {
     return this.canMoveOn.some(function(allowed) {
       return tile === allowed;
     });
   };
+
   Unit.prototype.move = function(to, tile) {
     var from;
     from = this.pos;
@@ -30,6 +35,7 @@ Unit = (function() {
       return this.calcDirection(from, to);
     }
   };
+
   Unit.prototype.calcDirection = function(from, to) {
     var dir;
     dir = "";
@@ -38,14 +44,11 @@ Unit = (function() {
     } else {
       dir += "n";
     }
-    if (from.x < to.x) {
-      dir += "e";
-    }
-    if (from.x > to.x) {
-      dir += "w";
-    }
+    if (from.x < to.x) dir += "e";
+    if (from.x > to.x) dir += "w";
     return this.direction = dir;
   };
+
   Unit.prototype.rotate = function(image) {
     var deg;
     if (!this.imageCache[this.direction]) {
@@ -76,9 +79,11 @@ Unit = (function() {
     }
     return this.imageCache[this.direction];
   };
+
   Unit.prototype.getCurrentImage = function() {
     return this.rotate(this.image);
   };
+
   Unit.prototype.getBrightImage = function() {
     var image;
     if (!this.brightCache[this.direction]) {
@@ -88,5 +93,7 @@ Unit = (function() {
     }
     return this.brightCache[this.direction];
   };
+
   return Unit;
+
 })();

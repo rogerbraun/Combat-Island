@@ -1,5 +1,7 @@
 var CanvasRenderer;
+
 CanvasRenderer = (function() {
+
   function CanvasRenderer(map, canvas) {
     var that;
     this.map = map;
@@ -19,14 +21,17 @@ CanvasRenderer = (function() {
     }, 1000);
     window.requestAnimationFrame || (window.requestAnimationFrame = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame);
   }
+
   CanvasRenderer.prototype.drawBackground = function() {
     this.context.fillStyle = 'black';
     return this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
   };
+
   CanvasRenderer.prototype.drawFps = function() {
     this.context.fillStyle = 'white';
     return this.context.fillText("FPS: " + this.fps, 15, 15);
   };
+
   CanvasRenderer.prototype.drawTiles = function() {
     var image, x, y, _ref, _results;
     _results = [];
@@ -35,10 +40,22 @@ CanvasRenderer = (function() {
         var _ref2, _results2;
         _results2 = [];
         for (x = 0, _ref2 = this.map.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
-          image = this.map.getTileImage({
-            x: x,
-            y: y
-          });
+          if ((this.map.hovered.x === x && this.map.hovered.y === y) || (this.map.selected.x === x && this.map.selected.y === y)) {
+            image = this.map.getBrightImage({
+              x: x,
+              y: y
+            });
+          } else if (this.map.inPossibleMoves(-x, -y)) {
+            image = this.map.getInvertedImage({
+              x: x,
+              y: y
+            });
+          } else {
+            image = this.map.getImage({
+              x: x,
+              y: y
+            });
+          }
           _results2.push(this.drawImage({
             x: x,
             y: y
@@ -49,6 +66,7 @@ CanvasRenderer = (function() {
     }
     return _results;
   };
+
   CanvasRenderer.prototype.drawUnits = function() {
     var unit, _i, _len, _ref, _results;
     _ref = this.map.units;
@@ -59,6 +77,7 @@ CanvasRenderer = (function() {
     }
     return _results;
   };
+
   CanvasRenderer.prototype.drawUnit = function(unit) {
     var image;
     image = unit.getCurrentImage();
@@ -67,6 +86,7 @@ CanvasRenderer = (function() {
     }
     return this.drawImage(unit.pos, image);
   };
+
   CanvasRenderer.prototype.drawImage = function(pos, image) {
     var height, hexOffsetY, width, x, xPos, y, yPos;
     x = pos.x;
@@ -86,6 +106,7 @@ CanvasRenderer = (function() {
     height = Math.round(height);
     return this.context.drawImage(image, 0, 0, image.width, image.height, xPos, yPos, width, height);
   };
+
   CanvasRenderer.prototype.draw = function() {
     var that;
     that = this;
@@ -98,5 +119,7 @@ CanvasRenderer = (function() {
       return that.draw();
     });
   };
+
   return CanvasRenderer;
+
 })();

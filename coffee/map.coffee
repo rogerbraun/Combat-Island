@@ -11,10 +11,15 @@ class Map
     @height = height
     @tiles = []
     @images = {}
+    @brightImages = {}
+    @invertedImages = {}
     @units = []
-    @selected = false
-    @hovered = false
-    @imageCache = {}
+    @selected =
+      x: -1
+      y: -1
+    @hovered =
+      x: -1
+      y: -1
     @currentPossibleMoves = false
 
   getTile: (x, y) ->
@@ -27,6 +32,10 @@ class Map
     image = new Image
     image.src = src
     @images[letter] = image
+    that = this
+    image.onload = () ->
+      that.brightImages[letter] = Filters.brighten image
+      that.invertedImages[letter] = Filters.invert image
         
   loadFromString: (string) ->
     lines = string.split '\n'
@@ -57,20 +66,18 @@ class Map
                 y: y
     res
 
-
-  inPossibleMoves: (destination) ->  
+  inPossibleMoves: (x, y) ->
     for move in @currentPossibleMoves
-      if move.x == destination.x && move.y == destination.y
+      if move.x == x && move.y == y
         return true
     return false
-
 
   select: (targetX, targetY, offset, zoom) ->
     old_selected = @selected
     @selected = @canvasPosToMapPos targetX, targetY, offset, zoom
     if @unitOnTile(old_selected.x, old_selected.y)
       unit = @getUnit(old_selected)
-      if @inPossibleMoves(@selected)
+      if @inPossibleMoves @selected.x, @selected.y
         @moveUnit old_selected, @selected
         @selected = false
     if @unitOnTile(@selected.x, @selected.y)
@@ -109,8 +116,14 @@ class Map
 
     neighbours
 
-  getTileImage: (pos) ->
-    image = @images[@getTile(pos.x, pos.y)]
+  getImage: (pos) ->
+    @images[@getTile(pos.x, pos.y)]
+
+  getBrightImage: (pos) ->
+    @brightImages[@getTile(pos.x, pos.y)]
+
+  getInvertedImage: (pos) ->
+    @invertedImages[@getTile(pos.x, pos.y)]
         
   getUnit: (pos) ->
     for unit in @units
