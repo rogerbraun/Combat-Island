@@ -54,11 +54,21 @@ class Game
       console.log("Zooming...")
       oldzoom = that.renderer.zoom
       if event.wheelDelta > 0
-        that.renderer.zoom = Math.max 1, that.renderer.zoom - 1
+        if oldzoom > 1
+          that.renderer.zoom -= 1
+          that.renderer.offset.x -= event.clientX
+          that.renderer.offset.y -= event.clientY
       else
-        that.renderer.zoom = Math.min 5, that.renderer.zoom + 1
-      that.renderer.offset.x *= (oldzoom / that.renderer.zoom)
-      that.renderer.offset.y *= (oldzoom / that.renderer.zoom)
+        if oldzoom < 5
+          that.renderer.zoom += 1 
+          that.renderer.offset.x -= event.clientX
+          that.renderer.offset.y -= event.clientY
+
+      if oldzoom != that.renderer.zoom
+        that.renderer.offset.x *= (oldzoom / that.renderer.zoom)
+        that.renderer.offset.y *= (oldzoom / that.renderer.zoom)
+        that.renderer.offset.x += that.canvas.width / 2
+        that.renderer.offset.y += that.canvas.height / 2
 
   fullWindow: () ->
     console.log "Resizing canvas..."
