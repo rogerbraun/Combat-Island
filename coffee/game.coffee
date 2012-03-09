@@ -27,7 +27,6 @@ class Game
       false
 
     @canvas.onmousedown = (event) ->
-      console.log event
       # Right Click
       if event.which == 3
         dragging = true

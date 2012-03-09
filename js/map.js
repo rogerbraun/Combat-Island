@@ -1,17 +1,16 @@
 var Map;
-
 Array.prototype.uniq = function() {
   var el, res, _i, _len;
   res = [];
   for (_i = 0, _len = this.length; _i < _len; _i++) {
     el = this[_i];
-    if (res.indexOf(el) === -1) res.push(el);
+    if (res.indexOf(el) === -1) {
+      res.push(el);
+    }
   }
   return res;
 };
-
 Map = (function() {
-
   function Map(width, height) {
     this.width = width;
     this.height = height;
@@ -26,16 +25,16 @@ Map = (function() {
       y: -1
     };
     this.currentPossibleMoves = false;
+    this.currentPlayer = 1;
+    this.selectedUnit = false;
+    this.hoveredTile = false;
   }
-
-  Map.prototype.getTile = function(x, y) {
-    return this.tiles[x + y * this.width];
+  Map.prototype.getTile = function(pos) {
+    return this.tiles[pos.x + pos.y * this.width];
   };
-
   Map.prototype.setTile = function(x, y, tile) {
     return this.tiles[x + y * this.width] = tile;
   };
-
   Map.prototype.loadFromString = function(string, images) {
     var element, elements, line, lines, tile, x, y, _len, _results;
     lines = string.split('\n');
@@ -56,10 +55,10 @@ Map = (function() {
     }
     return _results;
   };
-
   Map.prototype.canvasPosToMapPos = function(targetX, targetY, offset, zoom) {
-    var hexOffsetY, res, x, xPos, y, yPos, _ref, _ref2;
+    var hexOffsetY, res, x, xPos, y, yPos, _ref, _ref2, _results;
     res = false;
+    _results = [];
     for (y = 0, _ref = this.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
       for (x = 0, _ref2 = this.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
         if (x % 2 === 1) {
@@ -80,71 +79,98 @@ Map = (function() {
         }
       }
     }
+    return _results;
   };
-
-  Map.prototype.inPossibleMoves = function(x, y) {
+  Map.prototype.inPossibleMoves = function(pos) {
     var move, _i, _len, _ref;
     _ref = this.currentPossibleMoves;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       move = _ref[_i];
-      if (move.x === x && move.y === y) return true;
+      if (move.x === pos.x && move.y === pos.y) {
+        return true;
+      }
     }
     return false;
   };
-
   Map.prototype.restoreTiles = function() {
     var move, tile, _i, _len, _ref, _results;
     _ref = this.currentPossibleMoves;
     _results = [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       move = _ref[_i];
-      tile = this.getTile(move.x, move.y);
+      tile = this.getTile(move);
       _results.push(tile.restore());
     }
     return _results;
   };
-
-  Map.prototype.select = function(targetX, targetY, offset, zoom) {
-    var move, old_selected, tile, unit, _i, _len, _ref, _results;
-    old_selected = this.selected;
-    this.selected = this.canvasPosToMapPos(targetX, targetY, offset, zoom);
-    if (this.currentPossibleMoves) this.restoreTiles();
-    if (this.unitOnTile(old_selected.x, old_selected.y)) {
-      unit = this.getUnit(old_selected);
-      if (this.inPossibleMoves(this.selected.x, this.selected.y)) {
-        this.moveUnit(old_selected, this.selected);
-        this.selected = false;
-      }
+  Map.prototype.invertTiles = function() {
+    var move, tile, _i, _len, _ref, _results;
+    _ref = this.currentPossibleMoves;
+    _results = [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      move = _ref[_i];
+      tile = this.getTile(move);
+      _results.push(tile.invert());
     }
-    if (this.unitOnTile(this.selected.x, this.selected.y)) {
-      unit = this.getUnit(this.selected);
-      this.currentPossibleMoves = this.possibleMoves(unit);
-      _ref = this.currentPossibleMoves;
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        move = _ref[_i];
-        tile = this.getTile(move.x, move.y);
-        _results.push(tile.invert());
-      }
-      return _results;
+    return _results;
+  };
+  Map.prototype.selectUnit = function() {
+    this.selectedUnit = this.getUnit(this.selected);
+    this.currentPossibleMoves = this.possibleMoves(this.selectedUnit);
+    return this.invertTiles();
+  };
+  Map.prototype.deSelectUnit = function() {
+    this.selectedUnit = false;
+    this.restoreTiles();
+    return this.currentPossibleMoves = false;
+  };
+  Map.prototype.possiblySelectUnit = function() {
+    if (this.getUnit(this.selected).player === this.currentPlayer) {
+      return this.selectUnit();
+    }
+  };
+  Map.prototype.switchPlayer = function() {
+    if (this.currentPlayer === 1) {
+      return this.currentPlayer = 2;
     } else {
-      return this.currentPossibleMoves = false;
+      return this.currentPlayer = 1;
     }
   };
-
+  Map.prototype.possiblyMoveUnit = function() {
+    if (this.inPossibleMoves(this.selected)) {
+      if (this.unitOnTile(this.selected)) {
+        this.selectedUnit.battle(this.getUnit(this.selected));
+      } else {
+        this.selectedUnit.moveTo(this.selected);
+      }
+      this.deSelectUnit();
+      return this.switchPlayer();
+    } else {
+      return this.deSelectUnit();
+    }
+  };
+  Map.prototype.select = function(targetX, targetY, offset, zoom) {
+    this.selected = this.canvasPosToMapPos(targetX, targetY, offset, zoom);
+    if (this.selectedUnit) {
+      return this.possiblyMoveUnit();
+    } else {
+      if (this.unitOnTile(this.selected)) {
+        return this.possiblySelectUnit();
+      }
+    }
+  };
   Map.prototype.hover = function(targetX, targetY, offset, zoom) {
-    var tile;
-    if (this.hovered) {
-      tile = this.getTile(this.hovered.x, this.hovered.y);
-      if (tile) tile.restore();
-    }
-    this.hovered = this.canvasPosToMapPos(targetX, targetY, offset, zoom);
-    if (this.hovered) {
-      tile = this.getTile(this.hovered.x, this.hovered.y);
-      if (tile) return tile.brighten();
+    var newHoveredTile, pos;
+    pos = this.canvasPosToMapPos(targetX, targetY, offset, zoom);
+    newHoveredTile = this.getTile(pos);
+    if (newHoveredTile && (this.hoveredTile !== newHoveredTile)) {
+      if (this.hoveredTile) {
+        this.hoveredTile.restore();
+      }
+      this.hoveredTile = newHoveredTile;
+      return this.hoveredTile.brighten();
     }
   };
-
   Map.prototype.neighbours = function(pos) {
     var hexDiff, neighbours, that, x, y;
     x = pos.x;
@@ -177,31 +203,29 @@ Map = (function() {
     });
     return neighbours;
   };
-
   Map.prototype.getUnit = function(pos) {
     var unit, _i, _len, _ref;
     _ref = this.units;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       unit = _ref[_i];
-      if (unit.pos.x === pos.x && unit.pos.y === pos.y) return unit;
+      if (unit.pos.x === pos.x && unit.pos.y === pos.y) {
+        return unit;
+      }
     }
   };
-
-  Map.prototype.moveUnit = function(from, to) {
-    var unit;
-    unit = this.getUnit(from);
-    return unit.move(to, this.getTile(to.x, to.y));
+  Map.prototype.isPossibleMove = function(unit, pos) {
+    var tile;
+    tile = this.getTile(pos);
+    return unit.canMoveTo(tile) && (!this.unitOnTile(pos) || (this.unitOnTile(pos).player !== this.currentPlayer));
   };
-
   Map.prototype.possibleMoves = function(unit) {
     return this.possibleMovesHelper(unit, unit.moves - 1, this.neighbours(unit.pos));
   };
-
   Map.prototype.possibleMovesHelper = function(unit, movesLeft, neighbours, visited) {
     var neighbour, next_neighbours, res, that, _i, _len;
     that = this;
     neighbours = neighbours.filter(function(neighbour) {
-      return unit.canMoveTo(that.getTile(neighbour.x, neighbour.y)) && !that.unitOnTile(neighbour.x, neighbour.y);
+      return that.isPossibleMove(unit, neighbour);
     });
     if (movesLeft === 0) {
       return neighbours;
@@ -215,13 +239,10 @@ Map = (function() {
       return res.uniq();
     }
   };
-
-  Map.prototype.unitOnTile = function(x, y) {
+  Map.prototype.unitOnTile = function(tilePos) {
     return this.units.some(function(unit) {
-      return unit.pos.x === x && unit.pos.y === y;
+      return unit.pos.x === tilePos.x && unit.pos.y === tilePos.y;
     });
   };
-
   return Map;
-
 })();

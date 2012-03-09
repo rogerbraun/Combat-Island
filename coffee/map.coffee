@@ -18,9 +18,12 @@ class Map
       x: -1
       y: -1
     @currentPossibleMoves = false
+    @currentPlayer = 1
+    @selectedUnit = false
+    @hoveredTile = false
 
-  getTile: (x, y) ->
-    @tiles[x + y * @width]
+  getTile: (pos) ->
+    @tiles[pos.x + pos.y * @width]
 
   setTile: (x, y, tile) ->
     @tiles[x + y * @width] = tile
@@ -54,46 +57,72 @@ class Map
 
             return res
 
-  inPossibleMoves: (x, y) ->
+  inPossibleMoves: (pos) ->
     for move in @currentPossibleMoves
-      if move.x == x && move.y == y
+      if move.x == pos.x && move.y == pos.y
         return true
     return false
 
   restoreTiles: () ->
     for move in @currentPossibleMoves
-      tile = @getTile(move.x, move.y)
+      tile = @getTile(move)
       tile.restore()
 
-  select: (targetX, targetY, offset, zoom) ->
-    old_selected = @selected
-    @selected = @canvasPosToMapPos targetX, targetY, offset, zoom
-    if @currentPossibleMoves
-      @restoreTiles()
-    if @unitOnTile(old_selected.x, old_selected.y)
-      unit = @getUnit(old_selected)
-      if @inPossibleMoves @selected.x, @selected.y
-        @moveUnit old_selected, @selected
-        @selected = false
-    if @unitOnTile(@selected.x, @selected.y)
-      unit = @getUnit(@selected)
-      @currentPossibleMoves = @possibleMoves(unit)
-      for move in @currentPossibleMoves
-        tile = @getTile(move.x, move.y)
-        tile.invert()
+  invertTiles: () ->
+    for move in @currentPossibleMoves
+      tile = @getTile(move)
+      tile.invert()
+
+  selectUnit: () ->
+    @selectedUnit = @getUnit(@selected)
+    @currentPossibleMoves = @possibleMoves @selectedUnit
+    @invertTiles()
+
+  deSelectUnit: () ->
+    @selectedUnit = false
+    @restoreTiles()
+    @currentPossibleMoves = false
+
+  possiblySelectUnit: () ->
+    if @getUnit(@selected).player == @currentPlayer
+      @selectUnit()
+
+  switchPlayer: () ->
+    if @currentPlayer == 1
+      @currentPlayer = 2
     else
-      @currentPossibleMoves = false
+      @currentPlayer = 1
+
+  possiblyMoveUnit: () ->
+    if @inPossibleMoves @selected
+      if @unitOnTile @selected
+        # Attack unit on selected tile
+        @selectedUnit.battle(@getUnit(@selected))
+      else
+        # Move unit to empty tile
+        @selectedUnit.moveTo(@selected)
+      @deSelectUnit()
+      @switchPlayer()
+    else
+      @deSelectUnit()
+
+  select: (targetX, targetY, offset, zoom) ->
+    @selected = @canvasPosToMapPos targetX, targetY, offset, zoom
+
+    if @selectedUnit
+      @possiblyMoveUnit()
+    else
+      if @unitOnTile @selected
+        @possiblySelectUnit()
 
   hover: (targetX, targetY, offset, zoom) ->
-    if @hovered
-      tile = @getTile(@hovered.x, @hovered.y)
-      if tile
-        tile.restore()
-    @hovered = @canvasPosToMapPos targetX, targetY, offset, zoom
-    if @hovered
-      tile = @getTile(@hovered.x, @hovered.y)
-      if tile
-        tile.brighten()
+    pos = @canvasPosToMapPos targetX, targetY, offset, zoom
+    newHoveredTile = @getTile pos
+    if newHoveredTile && (@hoveredTile != newHoveredTile)
+      if @hoveredTile
+        @hoveredTile.restore()
+      @hoveredTile = newHoveredTile
+      @hoveredTile.brighten()
 
   neighbours: (pos) ->
     x = pos.x
@@ -127,9 +156,9 @@ class Map
       if unit.pos.x == pos.x && unit.pos.y == pos.y
         return unit
 
-  moveUnit: (from, to) ->
-    unit = @getUnit from
-    unit.move(to, @getTile(to.x, to.y))
+  isPossibleMove: (unit, pos) ->
+    tile = @getTile pos
+    unit.canMoveTo(tile) && (!@unitOnTile(pos) || (@unitOnTile(pos).player != @currentPlayer))
 
   possibleMoves: (unit) ->
     @possibleMovesHelper unit, unit.moves - 1, @neighbours(unit.pos)
@@ -137,7 +166,7 @@ class Map
   possibleMovesHelper: (unit, movesLeft, neighbours, visited) ->
     that = this
     neighbours = neighbours.filter (neighbour) ->
-      unit.canMoveTo(that.getTile(neighbour.x, neighbour.y)) && !that.unitOnTile(neighbour.x, neighbour.y)
+      that.isPossibleMove unit, neighbour
 
     if movesLeft == 0
       neighbours
@@ -148,6 +177,6 @@ class Map
         res = res.concat(@possibleMovesHelper(unit, movesLeft - 1, next_neighbours))
       res.uniq()
 
-  unitOnTile: (x, y) ->
+  unitOnTile: (tilePos) ->
     @units.some (unit) ->
-      unit.pos.x == x && unit.pos.y == y
+      unit.pos.x == tilePos.x && unit.pos.y == tilePos.y

@@ -23,14 +23,18 @@ class CanvasRenderer
 
   drawFps: () ->
     @context.fillStyle = 'white'
-    @context.fillText "FPS: #{@fps}", 15, 15
+    @context.font = '40pt Arial'
+    text = "FPS: #{@fps}"
+    width = @context.measureText(text).width
+    @context.fillText text, @canvas.width - width, 50
 
   drawTiles: () ->
     for y in [0...@map.height]
       for x in [0...@map.width]
-        tile = @map.getTile(x, y)
+        pos = {x: x, y: y}
+        tile = @map.getTile pos
         image = tile.currentImage
-        @drawImage({x: x, y: y}, image)
+        @drawImage(pos, image)
 
   drawUnits: () ->
     for unit in @map.units
@@ -38,7 +42,7 @@ class CanvasRenderer
 
   drawUnit: (unit) ->
     image = unit.getCurrentImage()
-    if @map.selected.x == unit.pos.x && @map.selected.y == unit.pos.y
+    if @map.selectedUnit == unit
       image = Filters.brighten image
     @drawImage(unit.pos, image)
 
@@ -63,6 +67,11 @@ class CanvasRenderer
 
     @context.drawImage image, 0, 0, image.width, image.height, xPos , yPos, width, height
 
+  drawInfo: () ->
+    @context.fillStyle = 'red'
+    @context.font = '40pt Arial'
+    @context.fillText "Player #{@map.currentPlayer}", 10, 60
+    
   draw: () ->
     that = this
     window.requestAnimationFrame () ->
@@ -70,6 +79,7 @@ class CanvasRenderer
       that.drawTiles()
       that.drawUnits()
       that.drawFps()
+      that.drawInfo()
 
       that.frames += 1
       that.draw()

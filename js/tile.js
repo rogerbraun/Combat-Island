@@ -1,7 +1,5 @@
 var ImageSet, Tile;
-
 ImageSet = (function() {
-
   function ImageSet(imageSrc) {
     var that;
     this.normal = new Image;
@@ -12,39 +10,29 @@ ImageSet = (function() {
       return that.inverted = Filters.invert(that.normal);
     };
   }
-
   return ImageSet;
-
 })();
-
 Tile = (function() {
-
   function Tile(imageSet, element) {
     this.imageSet = imageSet;
     this.element = element;
     this.currentImage = imageSet.normal;
     this.oldImages = [];
   }
-
   Tile.prototype.brighten = function() {
     this.oldImages.push(this.currentImage);
     return this.currentImage = this.imageSet.brightened;
   };
-
   Tile.prototype.normalize = function() {
     this.oldImages.push(this.currentImage);
     return this.currentImage = this.imageSet.normal;
   };
-
   Tile.prototype.invert = function() {
     this.oldImages.push(this.currentImage);
     return this.currentImage = this.imageSet.inverted;
   };
-
   Tile.prototype.restore = function() {
     return this.currentImage = this.oldImages.pop();
   };
-
   return Tile;
-
 })();

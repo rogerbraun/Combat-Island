@@ -16,6 +16,9 @@ class Unit
     @player = 1
     @imageCache = []
     @brightCache = []
+    @selected = false
+    @attack = 5
+    @defense = 5
 
   setPosition: (x, y) ->
     @pos.x = x
@@ -25,11 +28,10 @@ class Unit
     @canMoveOn.some (allowed) ->
       tile.element == allowed
 
-  move: (to, tile) ->
+  moveTo: (to) ->
     from = @pos
-    if @canMoveTo(tile)
-      @pos = to
-      @calcDirection(from, to)
+    @pos = to
+    @calcDirection(from, to)
 
   calcDirection: (from, to) ->
     dir = ""
@@ -59,6 +61,9 @@ class Unit
       image = Filters.rotate(image, deg)
       @imageCache[@direction] = image
     @imageCache[@direction]
+
+  battle: (otherUnit) ->
+    otherUnit.currentHealth -= @attack
 
   addHealthBar: (canvas) ->
     context = canvas.getContext '2d'

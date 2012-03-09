@@ -1,5 +1,4 @@
 var Game, black_screen;
-
 black_screen = {
   draw: function(canvas) {
     var context;
@@ -8,20 +7,16 @@ black_screen = {
     return context.fillRect(0, 0, canvas.width, canvas.height);
   }
 };
-
 Game = (function() {
-
   function Game(canvas) {
     this.canvas = canvas;
     this.map = black_screen;
     this.renderer = new CanvasRenderer(this.map, this.canvas);
   }
-
   Game.prototype.changeMap = function(map) {
     this.map = map;
     return this.renderer.map = map;
   };
-
   Game.prototype.register_handlers = function() {
     var dragging, dragpos, that;
     console.log("Registering Handlers...");
@@ -35,7 +30,6 @@ Game = (function() {
       return false;
     };
     this.canvas.onmousedown = function(event) {
-      console.log(event);
       if (event.which === 3) {
         dragging = true;
         dragpos = {
@@ -72,20 +66,16 @@ Game = (function() {
       return that.renderer.offset.y *= oldzoom / that.renderer.zoom;
     };
   };
-
   Game.prototype.fullWindow = function() {
     console.log("Resizing canvas...");
     this.canvas.width = document.body.clientWidth;
     return this.canvas.height = document.body.clientHeight;
   };
-
   Game.prototype.start = function() {
     console.log("Starting the game...");
     this.register_handlers();
     this.fullWindow();
     return this.renderer.draw();
   };
-
   return Game;
-
 })();
