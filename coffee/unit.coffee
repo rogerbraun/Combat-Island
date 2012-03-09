@@ -17,8 +17,8 @@ class Unit
     @imageCache = []
     @brightCache = []
     @selected = false
-    @attack = 5
-    @defense = 5
+    @attack = 15
+    @defense = 15
 
   setPosition: (x, y) ->
     @pos.x = x
@@ -76,7 +76,13 @@ class Unit
     canvas
 
   getCurrentImage: () ->
-    image = @rotate @image
+    image = document.createElement 'canvas'
+    image.width = @image.width
+    image.height = @image.height
+    ctx = image.getContext '2d'
+
+    ctx.drawImage(@rotate(@image), 0, 0)
+
     if @player == 2
       image = Filters.switchColor image
     image = @addHealthBar image

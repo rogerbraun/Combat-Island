@@ -21,8 +21,8 @@ Unit = (function() {
     this.imageCache = [];
     this.brightCache = [];
     this.selected = false;
-    this.attack = 5;
-    this.defense = 5;
+    this.attack = 15;
+    this.defense = 15;
   }
   Unit.prototype.setPosition = function(x, y) {
     this.pos.x = x;
@@ -99,8 +99,12 @@ Unit = (function() {
     return canvas;
   };
   Unit.prototype.getCurrentImage = function() {
-    var image;
-    image = this.rotate(this.image);
+    var ctx, image;
+    image = document.createElement('canvas');
+    image.width = this.image.width;
+    image.height = this.image.height;
+    ctx = image.getContext('2d');
+    ctx.drawImage(this.rotate(this.image), 0, 0);
     if (this.player === 2) {
       image = Filters.switchColor(image);
     }
