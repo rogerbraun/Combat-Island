@@ -17,7 +17,7 @@ class Unit
 
   canMoveTo: (tile) ->
     @canMoveOn.some (allowed) ->
-      tile == allowed
+      tile.element == allowed
 
   move: (to, tile) ->
     from = @pos
@@ -27,9 +27,9 @@ class Unit
 
   calcDirection: (from, to) ->
     dir = ""
-    if from.y < to.y 
+    if from.y < to.y
       dir += "s"
-    else 
+    else
       dir += "n"
     
     if from.x < to.x

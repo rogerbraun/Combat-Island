@@ -33,11 +33,12 @@ level_str = """
             wwwwwwwwwwwwwwwwwwwwwwwwwwwwww
             """
 
-level1.loadFromString level_str
+images =
+  w: new ImageSet 'images/water-tile.png'
+  g: new ImageSet 'images/grass-tile.png'
+  f: new ImageSet 'images/forest-tile.png'
 
-level1.setImage 'w', 'images/water-tile.png'
-level1.setImage 'g', 'images/grass-tile.png'
-level1.setImage 'f', 'images/forest-tile.png'
+level1.loadFromString level_str, images
 
 tank = new Unit('images/tank-unit.png')
 tank.setPosition(7, 7)

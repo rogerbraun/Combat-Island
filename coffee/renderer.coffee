@@ -28,12 +28,8 @@ class CanvasRenderer
   drawTiles: () ->
     for y in [0...@map.height]
       for x in [0...@map.width]
-        if (@map.hovered.x == x && @map.hovered.y == y) || (@map.selected.x == x && @map.selected.y == y)
-          image = @map.getBrightImage {x: x, y: y}
-        else if @map.inPossibleMoves -x, -y
-          image = @map.getInvertedImage {x: x, y: y}
-        else
-          image = @map.getImage {x: x, y: y}
+        tile = @map.getTile(x, y)
+        image = tile.currentImage
         @drawImage({x: x, y: y}, image)
 
   drawUnits: () ->

@@ -33,29 +33,15 @@ CanvasRenderer = (function() {
   };
 
   CanvasRenderer.prototype.drawTiles = function() {
-    var image, x, y, _ref, _results;
+    var image, tile, x, y, _ref, _results;
     _results = [];
     for (y = 0, _ref = this.map.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
       _results.push((function() {
         var _ref2, _results2;
         _results2 = [];
         for (x = 0, _ref2 = this.map.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
-          if ((this.map.hovered.x === x && this.map.hovered.y === y) || (this.map.selected.x === x && this.map.selected.y === y)) {
-            image = this.map.getBrightImage({
-              x: x,
-              y: y
-            });
-          } else if (this.map.inPossibleMoves(-x, -y)) {
-            image = this.map.getInvertedImage({
-              x: x,
-              y: y
-            });
-          } else {
-            image = this.map.getImage({
-              x: x,
-              y: y
-            });
-          }
+          tile = this.map.getTile(x, y);
+          image = tile.currentImage;
           _results2.push(this.drawImage({
             x: x,
             y: y

@@ -16,9 +16,6 @@ Map = (function() {
     this.width = width;
     this.height = height;
     this.tiles = [];
-    this.images = {};
-    this.brightImages = {};
-    this.invertedImages = {};
     this.units = [];
     this.selected = {
       x: -1,
@@ -35,24 +32,12 @@ Map = (function() {
     return this.tiles[x + y * this.width];
   };
 
-  Map.prototype.setTile = function(x, y, element) {
-    return this.tiles[x + y * this.width] = element;
+  Map.prototype.setTile = function(x, y, tile) {
+    return this.tiles[x + y * this.width] = tile;
   };
 
-  Map.prototype.setImage = function(letter, src) {
-    var image, that;
-    image = new Image;
-    image.src = src;
-    this.images[letter] = image;
-    that = this;
-    return image.onload = function() {
-      that.brightImages[letter] = Filters.brighten(image);
-      return that.invertedImages[letter] = Filters.invert(image);
-    };
-  };
-
-  Map.prototype.loadFromString = function(string) {
-    var element, elements, line, lines, x, y, _len, _results;
+  Map.prototype.loadFromString = function(string, images) {
+    var element, elements, line, lines, tile, x, y, _len, _results;
     lines = string.split('\n');
     _results = [];
     for (y = 0, _len = lines.length; y < _len; y++) {
@@ -63,7 +48,8 @@ Map = (function() {
         _results2 = [];
         for (x = 0, _len2 = elements.length; x < _len2; x++) {
           element = elements[x];
-          _results2.push(this.setTile(x, y, element));
+          tile = new Tile(images[element], element);
+          _results2.push(this.setTile(x, y, tile));
         }
         return _results2;
       }).call(this));
@@ -72,31 +58,28 @@ Map = (function() {
   };
 
   Map.prototype.canvasPosToMapPos = function(targetX, targetY, offset, zoom) {
-    var hexOffsetY, image, res, x, xPos, y, yPos, _ref, _ref2;
+    var hexOffsetY, res, x, xPos, y, yPos, _ref, _ref2;
     res = false;
     for (y = 0, _ref = this.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
       for (x = 0, _ref2 = this.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
-        image = this.images[this.getTile(x, y)];
-        if (image) {
-          if (x % 2 === 1) {
-            hexOffsetY = 100;
-          } else {
-            hexOffsetY = 0;
-          }
-          xPos = (x * 150) / zoom + offset.x;
-          yPos = (y * 200 + hexOffsetY) / zoom + offset.y;
-          if (targetX >= xPos && targetX < xPos + image.width / zoom) {
-            if (targetY >= yPos && targetY < yPos + image.height / zoom) {
-              res = {
-                x: x,
-                y: y
-              };
-            }
+        if (x % 2 === 1) {
+          hexOffsetY = 100;
+        } else {
+          hexOffsetY = 0;
+        }
+        xPos = (x * 150) / zoom + offset.x;
+        yPos = (y * 200 + hexOffsetY) / zoom + offset.y;
+        if (targetX >= xPos && targetX < xPos + 200 / zoom) {
+          if (targetY >= yPos && targetY < yPos + 200 / zoom) {
+            res = {
+              x: x,
+              y: y
+            };
+            return res;
           }
         }
       }
     }
-    return res;
   };
 
   Map.prototype.inPossibleMoves = function(x, y) {
@@ -109,10 +92,23 @@ Map = (function() {
     return false;
   };
 
+  Map.prototype.restoreTiles = function() {
+    var move, tile, _i, _len, _ref, _results;
+    _ref = this.currentPossibleMoves;
+    _results = [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      move = _ref[_i];
+      tile = this.getTile(move.x, move.y);
+      _results.push(tile.restore());
+    }
+    return _results;
+  };
+
   Map.prototype.select = function(targetX, targetY, offset, zoom) {
-    var old_selected, unit;
+    var move, old_selected, tile, unit, _i, _len, _ref, _results;
     old_selected = this.selected;
     this.selected = this.canvasPosToMapPos(targetX, targetY, offset, zoom);
+    if (this.currentPossibleMoves) this.restoreTiles();
     if (this.unitOnTile(old_selected.x, old_selected.y)) {
       unit = this.getUnit(old_selected);
       if (this.inPossibleMoves(this.selected.x, this.selected.y)) {
@@ -122,14 +118,31 @@ Map = (function() {
     }
     if (this.unitOnTile(this.selected.x, this.selected.y)) {
       unit = this.getUnit(this.selected);
-      return this.currentPossibleMoves = this.possibleMoves(unit);
+      this.currentPossibleMoves = this.possibleMoves(unit);
+      _ref = this.currentPossibleMoves;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        move = _ref[_i];
+        tile = this.getTile(move.x, move.y);
+        _results.push(tile.invert());
+      }
+      return _results;
     } else {
       return this.currentPossibleMoves = false;
     }
   };
 
   Map.prototype.hover = function(targetX, targetY, offset, zoom) {
-    return this.hovered = this.canvasPosToMapPos(targetX, targetY, offset, zoom);
+    var tile;
+    if (this.hovered) {
+      tile = this.getTile(this.hovered.x, this.hovered.y);
+      if (tile) tile.restore();
+    }
+    this.hovered = this.canvasPosToMapPos(targetX, targetY, offset, zoom);
+    if (this.hovered) {
+      tile = this.getTile(this.hovered.x, this.hovered.y);
+      if (tile) return tile.brighten();
+    }
   };
 
   Map.prototype.neighbours = function(pos) {
@@ -163,18 +176,6 @@ Map = (function() {
       return neighbour.x >= 0 && neighbour.y >= 0 && neighbour.x < that.width && neighbour.y < that.height;
     });
     return neighbours;
-  };
-
-  Map.prototype.getImage = function(pos) {
-    return this.images[this.getTile(pos.x, pos.y)];
-  };
-
-  Map.prototype.getBrightImage = function(pos) {
-    return this.brightImages[this.getTile(pos.x, pos.y)];
-  };
-
-  Map.prototype.getInvertedImage = function(pos) {
-    return this.invertedImages[this.getTile(pos.x, pos.y)];
   };
 
   Map.prototype.getUnit = function(pos) {

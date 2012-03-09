@@ -10,9 +10,6 @@ class Map
     @width = width
     @height = height
     @tiles = []
-    @images = {}
-    @brightImages = {}
-    @invertedImages = {}
     @units = []
     @selected =
       x: -1
@@ -25,46 +22,37 @@ class Map
   getTile: (x, y) ->
     @tiles[x + y * @width]
 
-  setTile: (x, y, element) ->
-    @tiles[x + y * @width] = element
+  setTile: (x, y, tile) ->
+    @tiles[x + y * @width] = tile
 
-  setImage: (letter, src) ->
-    image = new Image
-    image.src = src
-    @images[letter] = image
-    that = this
-    image.onload = () ->
-      that.brightImages[letter] = Filters.brighten image
-      that.invertedImages[letter] = Filters.invert image
-        
-  loadFromString: (string) ->
+  loadFromString: (string, images) ->
     lines = string.split '\n'
     for line, y in lines
       elements = line.split ''
       for element, x in elements
-        @setTile x, y, element
+        tile = new Tile images[element], element
+        @setTile x, y, tile
 
   # Rework this. It's slow and slightly incorrect  
   canvasPosToMapPos: (targetX, targetY, offset, zoom) ->
     res = false
     for y in [0...@height]
       for x in [0...@width]
-        image = @images[@getTile(x, y)]
-        if image
-          if x % 2 == 1
-            hexOffsetY = 100
-          else
-            hexOffsetY = 0
+        if x % 2 == 1
+          hexOffsetY = 100
+        else
+          hexOffsetY = 0
 
-          xPos = (x * 150) / zoom + offset.x
-          yPos = (y * 200 + hexOffsetY) / zoom + offset.y
+        xPos = (x * 150) / zoom + offset.x
+        yPos = (y * 200 + hexOffsetY) / zoom + offset.y
 
-          if targetX >= xPos && targetX < xPos + image.width / zoom
-            if targetY >= yPos && targetY < yPos + image.height / zoom
-              res =
-                x: x
-                y: y
-    res
+        if targetX >= xPos && targetX < xPos + 200 / zoom
+          if targetY >= yPos && targetY < yPos + 200 / zoom
+            res =
+              x: x
+              y: y
+
+            return res
 
   inPossibleMoves: (x, y) ->
     for move in @currentPossibleMoves
@@ -72,9 +60,16 @@ class Map
         return true
     return false
 
+  restoreTiles: () ->
+    for move in @currentPossibleMoves
+      tile = @getTile(move.x, move.y)
+      tile.restore()
+
   select: (targetX, targetY, offset, zoom) ->
     old_selected = @selected
     @selected = @canvasPosToMapPos targetX, targetY, offset, zoom
+    if @currentPossibleMoves
+      @restoreTiles()
     if @unitOnTile(old_selected.x, old_selected.y)
       unit = @getUnit(old_selected)
       if @inPossibleMoves @selected.x, @selected.y
@@ -83,11 +78,22 @@ class Map
     if @unitOnTile(@selected.x, @selected.y)
       unit = @getUnit(@selected)
       @currentPossibleMoves = @possibleMoves(unit)
+      for move in @currentPossibleMoves
+        tile = @getTile(move.x, move.y)
+        tile.invert()
     else
       @currentPossibleMoves = false
 
   hover: (targetX, targetY, offset, zoom) ->
+    if @hovered
+      tile = @getTile(@hovered.x, @hovered.y)
+      if tile
+        tile.restore()
     @hovered = @canvasPosToMapPos targetX, targetY, offset, zoom
+    if @hovered
+      tile = @getTile(@hovered.x, @hovered.y)
+      if tile
+        tile.brighten()
 
   neighbours: (pos) ->
     x = pos.x
@@ -115,15 +121,6 @@ class Map
       neighbour.x >= 0 && neighbour.y >= 0 && neighbour.x < that.width && neighbour.y < that.height
 
     neighbours
-
-  getImage: (pos) ->
-    @images[@getTile(pos.x, pos.y)]
-
-  getBrightImage: (pos) ->
-    @brightImages[@getTile(pos.x, pos.y)]
-
-  getInvertedImage: (pos) ->
-    @invertedImages[@getTile(pos.x, pos.y)]
         
   getUnit: (pos) ->
     for unit in @units

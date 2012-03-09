@@ -23,7 +23,7 @@ Unit = (function() {
 
   Unit.prototype.canMoveTo = function(tile) {
     return this.canMoveOn.some(function(allowed) {
-      return tile === allowed;
+      return tile.element === allowed;
     });
   };
 
