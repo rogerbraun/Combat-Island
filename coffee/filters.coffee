@@ -24,6 +24,16 @@ Filters =
     context.putImageData(imgd,0,0)
     canvas
 
+  switchColor: (image) ->
+    [context, imgd, pixels, canvas] = getPixels image
+    for i in [0...pixels.length] by 4
+      red = pixels[i]
+      pixels[i] = pixels[i + 2] 
+      pixels[i + 2] = red
+
+    context.putImageData(imgd,0,0)
+    canvas
+
   brighten: (image) ->
     [context, imgd, pixels, canvas] = getPixels image
     for i in [0...pixels.length] by 4

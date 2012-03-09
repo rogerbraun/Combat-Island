@@ -19,6 +19,7 @@ Unit = (function() {
     this.moves = 3;
     this.maxHealth = 100;
     this.currentHealth = 100;
+    this.player = 1;
     this.imageCache = [];
     this.brightCache = [];
   }
@@ -101,17 +102,16 @@ Unit = (function() {
   Unit.prototype.getCurrentImage = function() {
     var image;
     image = this.rotate(this.image);
-    return this.addHealthBar(image);
+    if (this.player === 2) image = Filters.switchColor(image);
+    image = this.addHealthBar(image);
+    return image;
   };
 
   Unit.prototype.getBrightImage = function() {
     var image;
-    if (!this.brightCache[this.direction]) {
-      image = getCurrentImage();
-      image = Filters.brighten(image);
-      this.brightCache[this.direction] = image;
-    }
-    return this.brightCache[this.direction];
+    image = getCurrentImage();
+    image = Filters.brighten(image);
+    return image;
   };
 
   return Unit;

@@ -30,6 +30,17 @@ Filters = {
     context.putImageData(imgd, 0, 0);
     return canvas;
   },
+  switchColor: function(image) {
+    var canvas, context, i, imgd, pixels, red, _ref, _ref2;
+    _ref = getPixels(image), context = _ref[0], imgd = _ref[1], pixels = _ref[2], canvas = _ref[3];
+    for (i = 0, _ref2 = pixels.length; i < _ref2; i += 4) {
+      red = pixels[i];
+      pixels[i] = pixels[i + 2];
+      pixels[i + 2] = red;
+    }
+    context.putImageData(imgd, 0, 0);
+    return canvas;
+  },
   brighten: function(image) {
     var canvas, context, i, imgd, pixels, _ref, _ref2;
     _ref = getPixels(image), context = _ref[0], imgd = _ref[1], pixels = _ref[2], canvas = _ref[3];

@@ -13,6 +13,7 @@ class Unit
     @moves = 3
     @maxHealth = 100
     @currentHealth = 100
+    @player = 1
     @imageCache = []
     @brightCache = []
 
@@ -71,12 +72,13 @@ class Unit
 
   getCurrentImage: () ->
     image = @rotate @image
-    @addHealthBar image
+    if @player == 2
+      image = Filters.switchColor image
+    image = @addHealthBar image
+    image
   
   getBrightImage: () ->
-    if !@brightCache[@direction]
-      image = getCurrentImage()
-      image = Filters.brighten(image)
-      @brightCache[@direction] = image
-    @brightCache[@direction]
+    image = getCurrentImage()
+    image = Filters.brighten(image)
+    image
 

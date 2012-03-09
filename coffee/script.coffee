@@ -46,13 +46,20 @@ tank.currentHealth = 50
 
 tank2 = new Unit('images/tank-unit.png')
 tank2.setPosition(3, 3)
+tank2.player = 2
 
 sub = new Submarine
 sub.currentHealth = 20
 
+sub2 = new Submarine
+sub2.setPosition(4,10)
+sub2.currentHealth = 10
+sub2.player = 2
+
 level1.units.push(tank)
 level1.units.push(tank2)
 level1.units.push(sub)
+level1.units.push(sub2)
 
 
 window.onload = () ->
