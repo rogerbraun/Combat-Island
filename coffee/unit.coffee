@@ -1,7 +1,10 @@
 class Unit
   constructor: (image_src) ->
-    @image = new Image
-    @image.src = image_src
+    image = new Image
+    image.src = image_src
+    that = this
+    image.onload = () ->
+      that.image = Filters.tilefy image
     @pos =
       x: 0
       y: 0
@@ -58,9 +61,12 @@ class Unit
 
   addHealthBar: (canvas) ->
     context = canvas.getContext '2d'
-    width = (@currentHealth / @maxHealth) * 80
-    context.fillStyle = "hsl(#{(width / 80) * 120},100%, 50%)"
-    context.fillRect 10, 10, width, 10
+    maxWidth = canvas.width *  0.8
+    offset = canvas.width * 0.1
+    width = (@currentHealth / @maxHealth) * maxWidth
+    # HSL!
+    context.fillStyle = "hsl(#{(width / maxWidth) * 120},100%, 50%)"
+    context.fillRect offset, offset, width, offset
     canvas
 
   getCurrentImage: () ->

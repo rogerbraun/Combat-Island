@@ -48,3 +48,12 @@ Filters =
     context.fill()
     canvas
 
+  tilefy: (image) ->
+    canvas = document.createElement 'canvas'
+    canvas.width = 200
+    canvas.height = 200
+    offset = (200 - image.width) / 2
+    context = canvas.getContext '2d'
+    context.drawImage(image, offset, offset)
+    canvas
+

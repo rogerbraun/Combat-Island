@@ -3,8 +3,13 @@ var Unit;
 Unit = (function() {
 
   function Unit(image_src) {
-    this.image = new Image;
-    this.image.src = image_src;
+    var image, that;
+    image = new Image;
+    image.src = image_src;
+    that = this;
+    image.onload = function() {
+      return that.image = Filters.tilefy(image);
+    };
     this.pos = {
       x: 0,
       y: 0
@@ -83,11 +88,13 @@ Unit = (function() {
   };
 
   Unit.prototype.addHealthBar = function(canvas) {
-    var context, width;
+    var context, maxWidth, offset, width;
     context = canvas.getContext('2d');
-    width = (this.currentHealth / this.maxHealth) * 80;
-    context.fillStyle = "hsl(" + ((width / 80) * 120) + ",100%, 50%)";
-    context.fillRect(10, 10, width, 10);
+    maxWidth = canvas.width * 0.8;
+    offset = canvas.width * 0.1;
+    width = (this.currentHealth / this.maxHealth) * maxWidth;
+    context.fillStyle = "hsl(" + ((width / maxWidth) * 120) + ",100%, 50%)";
+    context.fillRect(offset, offset, width, offset);
     return canvas;
   };
 
