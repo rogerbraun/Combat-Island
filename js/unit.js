@@ -1,5 +1,7 @@
 var Unit;
+
 Unit = (function() {
+
   function Unit(image_src) {
     var image, that;
     image = new Image;
@@ -24,21 +26,25 @@ Unit = (function() {
     this.attack = 15;
     this.defense = 15;
   }
+
   Unit.prototype.setPosition = function(x, y) {
     this.pos.x = x;
     return this.pos.y = y;
   };
+
   Unit.prototype.canMoveTo = function(tile) {
     return this.canMoveOn.some(function(allowed) {
       return tile.element === allowed;
     });
   };
+
   Unit.prototype.moveTo = function(to) {
     var from;
     from = this.pos;
     this.pos = to;
     return this.calcDirection(from, to);
   };
+
   Unit.prototype.calcDirection = function(from, to) {
     var dir;
     dir = "";
@@ -47,14 +53,11 @@ Unit = (function() {
     } else {
       dir += "n";
     }
-    if (from.x < to.x) {
-      dir += "e";
-    }
-    if (from.x > to.x) {
-      dir += "w";
-    }
+    if (from.x < to.x) dir += "e";
+    if (from.x > to.x) dir += "w";
     return this.direction = dir;
   };
+
   Unit.prototype.rotate = function(image) {
     var deg;
     if (!this.imageCache[this.direction]) {
@@ -85,9 +88,11 @@ Unit = (function() {
     }
     return this.imageCache[this.direction];
   };
+
   Unit.prototype.battle = function(otherUnit) {
     return otherUnit.currentHealth -= this.attack;
   };
+
   Unit.prototype.addHealthBar = function(canvas) {
     var context, maxWidth, offset, width;
     context = canvas.getContext('2d');
@@ -98,6 +103,7 @@ Unit = (function() {
     context.fillRect(offset, offset, width, offset);
     return canvas;
   };
+
   Unit.prototype.getCurrentImage = function() {
     var ctx, image;
     image = document.createElement('canvas');
@@ -105,17 +111,18 @@ Unit = (function() {
     image.height = this.image.height;
     ctx = image.getContext('2d');
     ctx.drawImage(this.rotate(this.image), 0, 0);
-    if (this.player === 2) {
-      image = Filters.switchColor(image);
-    }
+    if (this.player === 2) image = Filters.switchColor(image);
     image = this.addHealthBar(image);
     return image;
   };
+
   Unit.prototype.getBrightImage = function() {
     var image;
     image = getCurrentImage();
     image = Filters.brighten(image);
     return image;
   };
+
   return Unit;
+
 })();

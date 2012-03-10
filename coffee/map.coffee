@@ -177,6 +177,94 @@ class Map
         res = res.concat(@possibleMovesHelper(unit, movesLeft - 1, next_neighbours))
       res.uniq()
 
+  # Supposed to be an A* algorithm
+  findPath: (unit, goal) ->
+    
+    isEqualNode = (node, otherNode) ->
+      node.pos.x == otherNode.pos.x && node.pos.y == otherNode.pos.y
+
+    # See http://3dmdesign.com/development/hexmap-coordinates-the-easy-way
+    heuristicWeight = (node) ->
+      deltaX = node.pos.x - goal.x
+      deltaY = node.pos.y - goal.y
+      deltaD = deltaX - deltaY
+
+      Math.max(Math.abs(deltaX), Math.abs(deltaY), Math.abs(deltaD))
+
+    combinedWeight = (node) ->
+      node.weight + heuristicWeight(node)
+
+    sortNodes = (set) ->
+      set.sort (node, otherNode) ->
+        combinedWeight(node) - combinedWeight(otherNode)
+
+    getNode = (node, set) ->
+      for otherNode in set
+        if isEqualNode(node, otherNode)
+          return otherNode
+      return false
+
+    removeNode = (node, set) ->
+      nodeIndex = false
+      for possibleNode, index in set
+        if isEqualNode(possibleNode, node)
+          nodeIndex = index
+      set.splice(nodeIndex, 1)
+
+    startNode =
+      pos: unit.pos
+      weight: 0
+    
+    goalNode =
+      pos: goal
+
+    open = [startNode]
+    closed = []
+
+
+    while !isEqualNode(sortNodes(open)[0], goalNode)
+      currentNode = open.shift()
+      closed.push(currentNode)
+      
+      neighbours = @neighbours currentNode.pos
+      neighbours = neighbours.filter (neighbour) ->
+        @isPossibleMove unit, neighbour
+      , this
+
+      for neighbour in neighbours
+        neighbourNode =
+          pos: neighbour
+          weight: currentNode.weight + 1
+          parent: currentNode
+
+        inOpen = getNode(neighbourNode, open)
+        inClosed = getNode(neighbourNode, closed)
+
+        if inOpen && inOpen.weight > neighbourNode.weight
+          removeNode(inOpen, open)
+        if inClosed && inClosed.weight > neighbourNode.weight
+          removeNode(inClosed, closed)
+          
+        inOpen = getNode(neighbourNode, open)
+        inClosed = getNode(neighbourNode, closed)
+
+        if !inOpen && !inClosed
+          open.push neighbourNode
+
+  
+    res = []
+    goalNode = open[0]
+    while goalNode.parent
+      res.push(goalNode)
+      goalNode = goalNode.parent
+
+    #debugging
+    res.map (node) ->
+      @getTile(node.pos).brighten()
+    , this
+
+    console.log res
+
   unitOnTile: (tilePos) ->
     @units.some (unit) ->
       unit.pos.x == tilePos.x && unit.pos.y == tilePos.y
