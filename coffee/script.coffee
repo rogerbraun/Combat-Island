@@ -47,6 +47,11 @@ blueOverlay.src = 'images/blue-overlay.png'
 
 level1.overlays = [redOverlay, blueOverlay]
 
+whiteOverlay = new Image
+whiteOverlay.src = 'images/white-overlay.png'
+
+level1.brightOverlay = whiteOverlay
+
 tank = new Unit('images/tank-unit.png')
 tank.setPosition(7, 7)
 tank.currentHealth = 50

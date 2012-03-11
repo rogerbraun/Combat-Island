@@ -22,6 +22,7 @@ class Map
     @selectedUnit = false
     @hoveredTile = false
     @overlays = []
+    @brightOverlay = false
 
   getTile: (pos) ->
     @tiles[pos.x + pos.y * @width]
@@ -64,24 +65,12 @@ class Map
         return true
     return false
 
-  restoreTiles: () ->
-    for move in @currentPossibleMoves
-      tile = @getTile(move)
-      tile.restore()
-
-  invertTiles: () ->
-    for move in @currentPossibleMoves
-      tile = @getTile(move)
-      tile.invert()
-
   selectUnit: () ->
     @selectedUnit = @getUnit(@selected)
-    @currentPossibleMoves = @possibleMoves @selectedUnit
-    @invertTiles()
+    @currentPossibleMoves = @possibleMoves(@selectedUnit)
 
   deSelectUnit: () ->
     @selectedUnit = false
-    @restoreTiles()
     @currentPossibleMoves = false
 
   possiblySelectUnit: () ->
@@ -137,12 +126,7 @@ class Map
 
   hover: (targetX, targetY, offset, zoom) ->
     pos = @canvasPosToMapPos targetX, targetY, offset, zoom
-    newHoveredTile = @getTile pos
-    if newHoveredTile && (@hoveredTile != newHoveredTile)
-      if @hoveredTile
-        @hoveredTile.restore()
-      @hoveredTile = newHoveredTile
-      @hoveredTile.brighten()
+    @hovered = pos
 
   neighbours: (pos) ->
     x = pos.x
@@ -183,6 +167,17 @@ class Map
   possibleMoves: (unit) ->
     @possibleMovesHelper unit, unit.moves - 1, @neighbours(unit.pos)
 
+  uniquePositions: (array) ->
+    res = []
+    contains = (array, element) ->
+      array.some (cmp) ->
+        element.x == cmp.x && cmp.y == element.y
+
+    for element in array
+      if !contains(res, element)
+        res.push element
+    res
+
   possibleMovesHelper: (unit, movesLeft, neighbours, visited) ->
     that = this
     neighbours = neighbours.filter (neighbour) ->
@@ -195,7 +190,7 @@ class Map
       for neighbour in neighbours
         next_neighbours = @neighbours neighbour
         res = res.concat(@possibleMovesHelper(unit, movesLeft - 1, next_neighbours))
-      res.uniq()
+      res = @uniquePositions(res)
 
   # Supposed to be an A* algorithm
   findPath: (unit, goal) ->

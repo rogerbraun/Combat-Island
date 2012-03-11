@@ -1,4 +1,4 @@
-var blueOverlay, images, level1, level_str, redOverlay, sub, sub2, tank, tank2;
+var blueOverlay, images, level1, level_str, redOverlay, sub, sub2, tank, tank2, whiteOverlay;
 level1 = new Map(30, 30);
 level_str = "wwwwwwwwwwwwwwwwwwwwwwwwwwwwww\nwwggwwwwwwwwwgggwwwwwwwwwwwwww\nwwwggwwwwggggggggwwwwwwwwwwwww\nwwwgggwwgfgggggggwwwwwwwwwwwww\nwwwwggggffffgggggwwwwwwwwwwwww\nwwwwwwggfffffgggggwwwwwwwwwwww\nwwwwwgfffffgggggggwwwwwwwwwwww\nwwwwwggffffffgggggwwwwwwwwwwww\nwwwwwwggggggggggwwwwwggggwwwww\nwwwwwwwwwggggwwwwgggggggwwwwww\nwwwwwwwwwwwwwwwwwwggggggwwwwww\nwwwwwwwwwwwwwwwwgggggggwwwwwww\nwwwwwwwwwwwwwwwwwwggwwwwwwwwww\nwwwwwwwwwwggwwwwwwwwwwwwwwwwww\nwwwwwwwggggggggwwwwwwwwwwwwwww\nwwwwggggffffggwwwwwwwwwwwwwwww\nwwwwwggggfffgggwwwwwwwwwwwwwww\nwwwwwwwwggggggggggwwwwwwwwwwww\nwwwwwwwwwwwggwwwwwwwwwwwwwwwww\nwwwwwwgwwggggggwwwwwwwwwwwwwww\nwwwwwwgggggffggggwwwwwwwwwwwww\nwwwwwwwggfffgggwwwwwwwwwwwwwww\nwwwwwwwwggggwwwwwwwgggggggwwww\nwwwwwwwwwwggwwwwwgggffggwwwwww\nwwwwwwwwwwwwwwwwwggffgggwwwwww\nwwwwwwwwwwwwwwwwwggggwwwwwwwww\nwwwwwwwwwwwwwwwwwwwggggwwwwwww\nwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\nwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\nwwwwwwwwwwwwwwwwwwwwwwwwwwwwww";
 images = {
@@ -12,6 +12,9 @@ redOverlay.src = 'images/red-overlay.png';
 blueOverlay = new Image;
 blueOverlay.src = 'images/blue-overlay.png';
 level1.overlays = [redOverlay, blueOverlay];
+whiteOverlay = new Image;
+whiteOverlay.src = 'images/white-overlay.png';
+level1.brightOverlay = whiteOverlay;
 tank = new Unit('images/tank-unit.png');
 tank.setPosition(7, 7);
 tank.currentHealth = 50;

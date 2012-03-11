@@ -32,23 +32,31 @@ CanvasRenderer = (function() {
     return this.context.fillText(text, this.canvas.width - width, 50);
   };
   CanvasRenderer.prototype.drawTiles = function() {
-    var image, pos, tile, x, y, _ref, _results;
-    _results = [];
+    var image, pos, possible, tile, unit, x, y, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4, _results;
     for (y = 0, _ref = this.map.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
-      _results.push((function() {
-        var _ref2, _results2;
-        _results2 = [];
-        for (x = 0, _ref2 = this.map.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
-          pos = {
-            x: x,
-            y: y
-          };
-          tile = this.map.getTile(pos);
-          image = tile.currentImage;
-          _results2.push(this.drawImage(pos, image));
-        }
-        return _results2;
-      }).call(this));
+      for (x = 0, _ref2 = this.map.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
+        pos = {
+          x: x,
+          y: y
+        };
+        tile = this.map.getTile(pos);
+        image = tile.currentImage;
+        this.drawImage(pos, image);
+      }
+    }
+    if (this.map.hovered) {
+      this.drawImage(this.map.hovered, this.map.brightOverlay);
+    }
+    _ref3 = this.map.units;
+    for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
+      unit = _ref3[_i];
+      this.drawOverlay(unit);
+    }
+    _ref4 = this.map.currentPossibleMoves;
+    _results = [];
+    for (_j = 0, _len2 = _ref4.length; _j < _len2; _j++) {
+      possible = _ref4[_j];
+      _results.push(this.drawImage(possible, this.map.brightOverlay));
     }
     return _results;
   };
@@ -56,16 +64,11 @@ CanvasRenderer = (function() {
     return this.drawImage(unit.pos, this.map.overlays[unit.player - 1]);
   };
   CanvasRenderer.prototype.drawUnits = function() {
-    var unit, _i, _j, _len, _len2, _ref, _ref2, _results;
+    var unit, _i, _len, _ref, _results;
     _ref = this.map.units;
+    _results = [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       unit = _ref[_i];
-      this.drawOverlay(unit);
-    }
-    _ref2 = this.map.units;
-    _results = [];
-    for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
-      unit = _ref2[_j];
       _results.push(this.drawUnit(unit));
     }
     return _results;

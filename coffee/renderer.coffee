@@ -36,15 +36,20 @@ class CanvasRenderer
         image = tile.currentImage
         @drawImage(pos, image)
 
+    # Overlays for hovered
+    if @map.hovered
+      @drawImage(@map.hovered, @map.brightOverlay)
+    # Overlays for units
+    for unit in @map.units
+      @drawOverlay unit
+
+    for possible in @map.currentPossibleMoves
+      @drawImage(possible, @map.brightOverlay)
+
   drawOverlay: (unit) ->
     @drawImage(unit.pos, @map.overlays[unit.player - 1])
 
   drawUnits: () ->
-    # Overlays
-    for unit in @map.units
-      @drawOverlay unit
-
-    # The units
     for unit in @map.units
       @drawUnit unit
 

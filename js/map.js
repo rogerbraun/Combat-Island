@@ -29,6 +29,7 @@ Map = (function() {
     this.selectedUnit = false;
     this.hoveredTile = false;
     this.overlays = [];
+    this.brightOverlay = false;
   }
   Map.prototype.getTile = function(pos) {
     return this.tiles[pos.x + pos.y * this.width];
@@ -93,36 +94,12 @@ Map = (function() {
     }
     return false;
   };
-  Map.prototype.restoreTiles = function() {
-    var move, tile, _i, _len, _ref, _results;
-    _ref = this.currentPossibleMoves;
-    _results = [];
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      move = _ref[_i];
-      tile = this.getTile(move);
-      _results.push(tile.restore());
-    }
-    return _results;
-  };
-  Map.prototype.invertTiles = function() {
-    var move, tile, _i, _len, _ref, _results;
-    _ref = this.currentPossibleMoves;
-    _results = [];
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      move = _ref[_i];
-      tile = this.getTile(move);
-      _results.push(tile.invert());
-    }
-    return _results;
-  };
   Map.prototype.selectUnit = function() {
     this.selectedUnit = this.getUnit(this.selected);
-    this.currentPossibleMoves = this.possibleMoves(this.selectedUnit);
-    return this.invertTiles();
+    return this.currentPossibleMoves = this.possibleMoves(this.selectedUnit);
   };
   Map.prototype.deSelectUnit = function() {
     this.selectedUnit = false;
-    this.restoreTiles();
     return this.currentPossibleMoves = false;
   };
   Map.prototype.possiblySelectUnit = function() {
@@ -183,16 +160,9 @@ Map = (function() {
     }
   };
   Map.prototype.hover = function(targetX, targetY, offset, zoom) {
-    var newHoveredTile, pos;
+    var pos;
     pos = this.canvasPosToMapPos(targetX, targetY, offset, zoom);
-    newHoveredTile = this.getTile(pos);
-    if (newHoveredTile && (this.hoveredTile !== newHoveredTile)) {
-      if (this.hoveredTile) {
-        this.hoveredTile.restore();
-      }
-      this.hoveredTile = newHoveredTile;
-      return this.hoveredTile.brighten();
-    }
+    return this.hovered = pos;
   };
   Map.prototype.neighbours = function(pos) {
     var hexDiff, neighbours, that, x, y;
@@ -244,6 +214,22 @@ Map = (function() {
   Map.prototype.possibleMoves = function(unit) {
     return this.possibleMovesHelper(unit, unit.moves - 1, this.neighbours(unit.pos));
   };
+  Map.prototype.uniquePositions = function(array) {
+    var contains, element, res, _i, _len;
+    res = [];
+    contains = function(array, element) {
+      return array.some(function(cmp) {
+        return element.x === cmp.x && cmp.y === element.y;
+      });
+    };
+    for (_i = 0, _len = array.length; _i < _len; _i++) {
+      element = array[_i];
+      if (!contains(res, element)) {
+        res.push(element);
+      }
+    }
+    return res;
+  };
   Map.prototype.possibleMovesHelper = function(unit, movesLeft, neighbours, visited) {
     var neighbour, next_neighbours, res, that, _i, _len;
     that = this;
@@ -259,7 +245,7 @@ Map = (function() {
         next_neighbours = this.neighbours(neighbour);
         res = res.concat(this.possibleMovesHelper(unit, movesLeft - 1, next_neighbours));
       }
-      return res.uniq();
+      return res = this.uniquePositions(res);
     }
   };
   Map.prototype.findPath = function(unit, goal) {
