@@ -21,6 +21,7 @@ class Map
     @currentPlayer = 1
     @selectedUnit = false
     @hoveredTile = false
+    @overlays = []
 
   getTile: (pos) ->
     @tiles[pos.x + pos.y * @width]
@@ -99,7 +100,7 @@ class Map
     moveAlongPath = () ->
       if path.length > 0
         if path.length == 1 && callback
-          setTimeout callback, 300
+          callback()
         else
           next = path.shift()
           unit.moveTo(next)

@@ -36,7 +36,15 @@ class CanvasRenderer
         image = tile.currentImage
         @drawImage(pos, image)
 
+  drawOverlay: (unit) ->
+    @drawImage(unit.pos, @map.overlays[unit.player - 1])
+
   drawUnits: () ->
+    # Overlays
+    for unit in @map.units
+      @drawOverlay unit
+
+    # The units
     for unit in @map.units
       @drawUnit unit
 

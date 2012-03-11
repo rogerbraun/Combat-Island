@@ -52,12 +52,20 @@ CanvasRenderer = (function() {
     }
     return _results;
   };
+  CanvasRenderer.prototype.drawOverlay = function(unit) {
+    return this.drawImage(unit.pos, this.map.overlays[unit.player - 1]);
+  };
   CanvasRenderer.prototype.drawUnits = function() {
-    var unit, _i, _len, _ref, _results;
+    var unit, _i, _j, _len, _len2, _ref, _ref2, _results;
     _ref = this.map.units;
-    _results = [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       unit = _ref[_i];
+      this.drawOverlay(unit);
+    }
+    _ref2 = this.map.units;
+    _results = [];
+    for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+      unit = _ref2[_j];
       _results.push(this.drawUnit(unit));
     }
     return _results;

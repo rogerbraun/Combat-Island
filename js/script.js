@@ -1,4 +1,4 @@
-var images, level1, level_str, sub, sub2, tank, tank2;
+var blueOverlay, images, level1, level_str, redOverlay, sub, sub2, tank, tank2;
 level1 = new Map(30, 30);
 level_str = "wwwwwwwwwwwwwwwwwwwwwwwwwwwwww\nwwggwwwwwwwwwgggwwwwwwwwwwwwww\nwwwggwwwwggggggggwwwwwwwwwwwww\nwwwgggwwgfgggggggwwwwwwwwwwwww\nwwwwggggffffgggggwwwwwwwwwwwww\nwwwwwwggfffffgggggwwwwwwwwwwww\nwwwwwgfffffgggggggwwwwwwwwwwww\nwwwwwggffffffgggggwwwwwwwwwwww\nwwwwwwggggggggggwwwwwggggwwwww\nwwwwwwwwwggggwwwwgggggggwwwwww\nwwwwwwwwwwwwwwwwwwggggggwwwwww\nwwwwwwwwwwwwwwwwgggggggwwwwwww\nwwwwwwwwwwwwwwwwwwggwwwwwwwwww\nwwwwwwwwwwggwwwwwwwwwwwwwwwwww\nwwwwwwwggggggggwwwwwwwwwwwwwww\nwwwwggggffffggwwwwwwwwwwwwwwww\nwwwwwggggfffgggwwwwwwwwwwwwwww\nwwwwwwwwggggggggggwwwwwwwwwwww\nwwwwwwwwwwwggwwwwwwwwwwwwwwwww\nwwwwwwgwwggggggwwwwwwwwwwwwwww\nwwwwwwgggggffggggwwwwwwwwwwwww\nwwwwwwwggfffgggwwwwwwwwwwwwwww\nwwwwwwwwggggwwwwwwwgggggggwwww\nwwwwwwwwwwggwwwwwgggffggwwwwww\nwwwwwwwwwwwwwwwwwggffgggwwwwww\nwwwwwwwwwwwwwwwwwggggwwwwwwwww\nwwwwwwwwwwwwwwwwwwwggggwwwwwww\nwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\nwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\nwwwwwwwwwwwwwwwwwwwwwwwwwwwwww";
 images = {
@@ -7,6 +7,11 @@ images = {
   f: new ImageSet('images/forest-tile.png')
 };
 level1.loadFromString(level_str, images);
+redOverlay = new Image;
+redOverlay.src = 'images/red-overlay.png';
+blueOverlay = new Image;
+blueOverlay.src = 'images/blue-overlay.png';
+level1.overlays = [redOverlay, blueOverlay];
 tank = new Unit('images/tank-unit.png');
 tank.setPosition(7, 7);
 tank.currentHealth = 50;

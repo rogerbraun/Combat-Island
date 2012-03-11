@@ -40,6 +40,13 @@ images =
 
 level1.loadFromString level_str, images
 
+redOverlay = new Image
+redOverlay.src ='images/red-overlay.png'
+blueOverlay = new Image
+blueOverlay.src = 'images/blue-overlay.png'
+
+level1.overlays = [redOverlay, blueOverlay]
+
 tank = new Unit('images/tank-unit.png')
 tank.setPosition(7, 7)
 tank.currentHealth = 50

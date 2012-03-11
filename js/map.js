@@ -28,6 +28,7 @@ Map = (function() {
     this.currentPlayer = 1;
     this.selectedUnit = false;
     this.hoveredTile = false;
+    this.overlays = [];
   }
   Map.prototype.getTile = function(pos) {
     return this.tiles[pos.x + pos.y * this.width];
@@ -143,7 +144,7 @@ Map = (function() {
       var next;
       if (path.length > 0) {
         if (path.length === 1 && callback) {
-          return setTimeout(callback, 300);
+          return callback();
         } else {
           next = path.shift();
           unit.moveTo(next);
