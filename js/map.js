@@ -10,6 +10,23 @@ Array.prototype.uniq = function() {
   }
   return res;
 };
+Array.prototype.remove = function(el) {
+  var cmp, found, index, removeIndex, _len;
+  removeIndex = false;
+  found = false;
+  for (index = 0, _len = this.length; index < _len; index++) {
+    cmp = this[index];
+    if (cmp === el) {
+      removeIndex = index;
+      found = true;
+    }
+  }
+  if (found) {
+    return this.splice(removeIndex, 1);
+  } else {
+    return this;
+  }
+};
 Map = (function() {
   function Map(width, height) {
     this.width = width;
@@ -125,15 +142,20 @@ Map = (function() {
         } else {
           next = path.shift();
           unit.moveTo(next);
-          return setTimeout(moveAlongPath, 300);
+          return setTimeout(moveAlongPath, 150);
         }
       }
     };
     return moveAlongPath(path);
   };
   Map.prototype.moveAndAttack = function(unit, otherUnit) {
+    var that;
+    that = this;
     return this.animatedMove(unit, otherUnit.pos, function() {
-      return unit.battle(otherUnit);
+      unit.battle(otherUnit);
+      if (otherUnit.currentHealth <= 0) {
+        return that.units.remove(otherUnit);
+      }
     });
   };
   Map.prototype.possiblyMoveUnit = function() {

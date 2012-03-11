@@ -5,6 +5,19 @@ Array::uniq = ->
       res.push el
   res
 
+Array::remove = (el) ->
+  removeIndex = false
+  found = false
+  for cmp, index in this
+    if cmp == el
+      removeIndex = index
+      found = true
+  if found
+    this.splice(removeIndex, 1)
+  else
+    this
+
+
 class Map
   constructor: (width, height) ->
     @width = width
@@ -93,13 +106,17 @@ class Map
         else
           next = path.shift()
           unit.moveTo(next)
-          setTimeout moveAlongPath, 300
+          setTimeout moveAlongPath, 150 
 
     moveAlongPath path 
 
   moveAndAttack: (unit, otherUnit) ->
+    that = this
     @animatedMove unit, otherUnit.pos, () ->
       unit.battle otherUnit
+      if otherUnit.currentHealth <= 0
+        that.units.remove otherUnit
+
 
   possiblyMoveUnit: () ->
     if @inPossibleMoves @selected
