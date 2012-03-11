@@ -98,11 +98,11 @@ class Map
 
     moveAlongPath = () ->
       if path.length > 0
-        next = path.shift()
-        unit.moveTo(next)
         if path.length == 1 && callback
           setTimeout callback, 300
         else
+          next = path.shift()
+          unit.moveTo(next)
           setTimeout moveAlongPath, 300
 
     moveAlongPath path 

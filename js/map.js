@@ -142,11 +142,11 @@ Map = (function() {
     moveAlongPath = function() {
       var next;
       if (path.length > 0) {
-        next = path.shift();
-        unit.moveTo(next);
         if (path.length === 1 && callback) {
           return setTimeout(callback, 300);
         } else {
+          next = path.shift();
+          unit.moveTo(next);
           return setTimeout(moveAlongPath, 300);
         }
       }
