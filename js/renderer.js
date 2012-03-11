@@ -1,7 +1,5 @@
 var CanvasRenderer;
-
 CanvasRenderer = (function() {
-
   function CanvasRenderer(map, canvas) {
     var that;
     this.map = map;
@@ -21,12 +19,10 @@ CanvasRenderer = (function() {
     }, 1000);
     window.requestAnimationFrame || (window.requestAnimationFrame = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame);
   }
-
   CanvasRenderer.prototype.drawBackground = function() {
     this.context.fillStyle = 'black';
     return this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
   };
-
   CanvasRenderer.prototype.drawFps = function() {
     var text, width;
     this.context.fillStyle = 'white';
@@ -35,7 +31,6 @@ CanvasRenderer = (function() {
     width = this.context.measureText(text).width;
     return this.context.fillText(text, this.canvas.width - width, 50);
   };
-
   CanvasRenderer.prototype.drawTiles = function() {
     var image, pos, tile, x, y, _ref, _results;
     _results = [];
@@ -57,7 +52,6 @@ CanvasRenderer = (function() {
     }
     return _results;
   };
-
   CanvasRenderer.prototype.drawUnits = function() {
     var unit, _i, _len, _ref, _results;
     _ref = this.map.units;
@@ -68,14 +62,14 @@ CanvasRenderer = (function() {
     }
     return _results;
   };
-
   CanvasRenderer.prototype.drawUnit = function(unit) {
     var image;
     image = unit.getCurrentImage();
-    if (this.map.selectedUnit === unit) image = Filters.brighten(image);
+    if (this.map.selectedUnit === unit) {
+      image = Filters.brighten(image);
+    }
     return this.drawImage(unit.pos, image);
   };
-
   CanvasRenderer.prototype.drawImage = function(pos, image) {
     var height, hexOffsetY, width, x, xPos, y, yPos;
     x = pos.x;
@@ -95,13 +89,11 @@ CanvasRenderer = (function() {
     height = Math.round(height);
     return this.context.drawImage(image, 0, 0, image.width, image.height, xPos, yPos, width, height);
   };
-
   CanvasRenderer.prototype.drawInfo = function() {
     this.context.fillStyle = 'red';
     this.context.font = '40pt Arial';
     return this.context.fillText("Player " + this.map.currentPlayer, 10, 60);
   };
-
   CanvasRenderer.prototype.draw = function() {
     var that;
     that = this;
@@ -115,7 +107,5 @@ CanvasRenderer = (function() {
       return that.draw();
     });
   };
-
   return CanvasRenderer;
-
 })();

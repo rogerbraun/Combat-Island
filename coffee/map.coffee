@@ -93,14 +93,33 @@ class Map
     else
       @currentPlayer = 1
 
+  animatedMove: (unit, goal, callback) ->
+    path = @findPath(unit, goal)
+
+    moveAlongPath = () ->
+      if path.length > 0
+        next = path.shift()
+        unit.moveTo(next)
+        if path.length == 1 && callback
+          setTimeout callback, 300
+        else
+          setTimeout moveAlongPath, 300
+
+    moveAlongPath path 
+
+  moveAndAttack: (unit, otherUnit) ->
+    @animatedMove unit, otherUnit.pos, () ->
+      unit.battle otherUnit
+
   possiblyMoveUnit: () ->
     if @inPossibleMoves @selected
       if @unitOnTile @selected
         # Attack unit on selected tile
-        @selectedUnit.battle(@getUnit(@selected))
+        @moveAndAttack(@selectedUnit, @getUnit(@selected))
+        #@selectedUnit.battle(@getUnit(@selected))
       else
         # Move unit to empty tile
-        @selectedUnit.moveTo(@selected)
+        @animatedMove @selectedUnit, @selected
       @deSelectUnit()
       @switchPlayer()
     else
@@ -258,12 +277,9 @@ class Map
       res.push(goalNode)
       goalNode = goalNode.parent
 
-    #debugging
-    res.map (node) ->
-      @getTile(node.pos).brighten()
-    , this
-
-    console.log res
+    res = res.map (el) ->
+      el.pos
+    res.reverse()
 
   unitOnTile: (tilePos) ->
     @units.some (unit) ->

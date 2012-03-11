@@ -67,8 +67,8 @@ class Game
       if oldzoom != that.renderer.zoom
         that.renderer.offset.x *= (oldzoom / that.renderer.zoom)
         that.renderer.offset.y *= (oldzoom / that.renderer.zoom)
-        that.renderer.offset.x += that.canvas.width / 2
-        that.renderer.offset.y += that.canvas.height / 2
+        that.renderer.offset.x += (that.canvas.width / 2)
+        that.renderer.offset.y += (that.canvas.height / 2)
 
   fullWindow: () ->
     console.log "Resizing canvas..."
