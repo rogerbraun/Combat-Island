@@ -1,15 +1,15 @@
 var Map;
+
 Array.prototype.uniq = function() {
   var el, res, _i, _len;
   res = [];
   for (_i = 0, _len = this.length; _i < _len; _i++) {
     el = this[_i];
-    if (res.indexOf(el) === -1) {
-      res.push(el);
-    }
+    if (res.indexOf(el) === -1) res.push(el);
   }
   return res;
 };
+
 Array.prototype.remove = function(el) {
   var cmp, found, index, removeIndex, _len;
   removeIndex = false;
@@ -27,7 +27,9 @@ Array.prototype.remove = function(el) {
     return this;
   }
 };
+
 Map = (function() {
+
   function Map(width, height) {
     this.width = width;
     this.height = height;
@@ -48,12 +50,15 @@ Map = (function() {
     this.overlays = [];
     this.brightOverlay = false;
   }
+
   Map.prototype.getTile = function(pos) {
     return this.tiles[pos.x + pos.y * this.width];
   };
+
   Map.prototype.setTile = function(x, y, tile) {
     return this.tiles[x + y * this.width] = tile;
   };
+
   Map.prototype.loadFromString = function(string, images) {
     var element, elements, line, lines, tile, x, y, _len, _results;
     lines = string.split('\n');
@@ -74,10 +79,10 @@ Map = (function() {
     }
     return _results;
   };
+
   Map.prototype.canvasPosToMapPos = function(targetX, targetY, offset, zoom) {
-    var hexOffsetY, res, x, xPos, y, yPos, _ref, _ref2, _results;
+    var hexOffsetY, res, x, xPos, y, yPos, _ref, _ref2;
     res = false;
-    _results = [];
     for (y = 0, _ref = this.height; 0 <= _ref ? y < _ref : y > _ref; 0 <= _ref ? y++ : y--) {
       for (x = 0, _ref2 = this.width; 0 <= _ref2 ? x < _ref2 : x > _ref2; 0 <= _ref2 ? x++ : x--) {
         if (x % 2 === 1) {
@@ -98,32 +103,34 @@ Map = (function() {
         }
       }
     }
-    return _results;
   };
+
   Map.prototype.inPossibleMoves = function(pos) {
     var move, _i, _len, _ref;
     _ref = this.currentPossibleMoves;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       move = _ref[_i];
-      if (move.x === pos.x && move.y === pos.y) {
-        return true;
-      }
+      if (move.x === pos.x && move.y === pos.y) return true;
     }
     return false;
   };
+
   Map.prototype.selectUnit = function() {
     this.selectedUnit = this.getUnit(this.selected);
     return this.currentPossibleMoves = this.possibleMoves(this.selectedUnit);
   };
+
   Map.prototype.deSelectUnit = function() {
     this.selectedUnit = false;
     return this.currentPossibleMoves = false;
   };
+
   Map.prototype.possiblySelectUnit = function() {
     if (this.getUnit(this.selected).player === this.currentPlayer) {
       return this.selectUnit();
     }
   };
+
   Map.prototype.switchPlayer = function() {
     if (this.currentPlayer === 1) {
       return this.currentPlayer = 2;
@@ -131,6 +138,7 @@ Map = (function() {
       return this.currentPlayer = 1;
     }
   };
+
   Map.prototype.animatedMove = function(unit, goal, callback) {
     var moveAlongPath, path;
     path = this.findPath(unit, goal);
@@ -148,16 +156,16 @@ Map = (function() {
     };
     return moveAlongPath(path);
   };
+
   Map.prototype.moveAndAttack = function(unit, otherUnit) {
     var that;
     that = this;
     return this.animatedMove(unit, otherUnit.pos, function() {
       unit.battle(otherUnit);
-      if (otherUnit.currentHealth <= 0) {
-        return that.units.remove(otherUnit);
-      }
+      if (otherUnit.currentHealth <= 0) return that.units.remove(otherUnit);
     });
   };
+
   Map.prototype.possiblyMoveUnit = function() {
     if (this.inPossibleMoves(this.selected)) {
       if (this.unitOnTile(this.selected)) {
@@ -171,21 +179,22 @@ Map = (function() {
       return this.deSelectUnit();
     }
   };
+
   Map.prototype.select = function(targetX, targetY, offset, zoom) {
     this.selected = this.canvasPosToMapPos(targetX, targetY, offset, zoom);
     if (this.selectedUnit) {
       return this.possiblyMoveUnit();
     } else {
-      if (this.unitOnTile(this.selected)) {
-        return this.possiblySelectUnit();
-      }
+      if (this.unitOnTile(this.selected)) return this.possiblySelectUnit();
     }
   };
+
   Map.prototype.hover = function(targetX, targetY, offset, zoom) {
     var pos;
     pos = this.canvasPosToMapPos(targetX, targetY, offset, zoom);
     return this.hovered = pos;
   };
+
   Map.prototype.neighbours = function(pos) {
     var hexDiff, neighbours, that, x, y;
     x = pos.x;
@@ -218,24 +227,26 @@ Map = (function() {
     });
     return neighbours;
   };
+
   Map.prototype.getUnit = function(pos) {
     var unit, _i, _len, _ref;
     _ref = this.units;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       unit = _ref[_i];
-      if (unit.pos.x === pos.x && unit.pos.y === pos.y) {
-        return unit;
-      }
+      if (unit.pos.x === pos.x && unit.pos.y === pos.y) return unit;
     }
   };
+
   Map.prototype.isPossibleMove = function(unit, pos) {
     var tile;
     tile = this.getTile(pos);
     return unit.canMoveTo(tile) && (!this.unitOnTile(pos) || (this.unitOnTile(pos).player !== this.currentPlayer));
   };
+
   Map.prototype.possibleMoves = function(unit) {
     return this.possibleMovesHelper(unit, unit.moves - 1, this.neighbours(unit.pos));
   };
+
   Map.prototype.uniquePositions = function(array) {
     var contains, element, res, _i, _len;
     res = [];
@@ -246,12 +257,11 @@ Map = (function() {
     };
     for (_i = 0, _len = array.length; _i < _len; _i++) {
       element = array[_i];
-      if (!contains(res, element)) {
-        res.push(element);
-      }
+      if (!contains(res, element)) res.push(element);
     }
     return res;
   };
+
   Map.prototype.possibleMovesHelper = function(unit, movesLeft, neighbours, visited) {
     var neighbour, next_neighbours, res, that, _i, _len;
     that = this;
@@ -270,6 +280,7 @@ Map = (function() {
       return res = this.uniquePositions(res);
     }
   };
+
   Map.prototype.findPath = function(unit, goal) {
     var closed, combinedWeight, currentNode, getNode, goalNode, heuristicWeight, inClosed, inOpen, isEqualNode, neighbour, neighbourNode, neighbours, open, removeNode, res, sortNodes, startNode, _i, _len;
     isEqualNode = function(node, otherNode) {
@@ -294,9 +305,7 @@ Map = (function() {
       var otherNode, _i, _len;
       for (_i = 0, _len = set.length; _i < _len; _i++) {
         otherNode = set[_i];
-        if (isEqualNode(node, otherNode)) {
-          return otherNode;
-        }
+        if (isEqualNode(node, otherNode)) return otherNode;
       }
       return false;
     };
@@ -305,9 +314,7 @@ Map = (function() {
       nodeIndex = false;
       for (index = 0, _len = set.length; index < _len; index++) {
         possibleNode = set[index];
-        if (isEqualNode(possibleNode, node)) {
-          nodeIndex = index;
-        }
+        if (isEqualNode(possibleNode, node)) nodeIndex = index;
       }
       return set.splice(nodeIndex, 1);
     };
@@ -344,9 +351,7 @@ Map = (function() {
         }
         inOpen = getNode(neighbourNode, open);
         inClosed = getNode(neighbourNode, closed);
-        if (!inOpen && !inClosed) {
-          open.push(neighbourNode);
-        }
+        if (!inOpen && !inClosed) open.push(neighbourNode);
       }
     }
     res = [];
@@ -360,10 +365,13 @@ Map = (function() {
     });
     return res.reverse();
   };
+
   Map.prototype.unitOnTile = function(tilePos) {
     return this.units.some(function(unit) {
       return unit.pos.x === tilePos.x && unit.pos.y === tilePos.y;
     });
   };
+
   return Map;
+
 })();

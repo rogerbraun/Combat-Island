@@ -79,4 +79,5 @@ class Game
     console.log("Starting the game...")
     @register_handlers()
     @fullWindow()
+    @renderer.ready()
     @renderer.draw()

@@ -2,6 +2,7 @@ class CanvasRenderer
   constructor: (map, canvas) ->
     @map = map
     @canvas = canvas
+    @tileCanvas = false
     @context = @canvas.getContext '2d'
     @frames = 0
     @fps = 0
@@ -29,12 +30,9 @@ class CanvasRenderer
     @context.fillText text, @canvas.width - width, 50
 
   drawTiles: () ->
-    for y in [0...@map.height]
-      for x in [0...@map.width]
-        pos = {x: x, y: y}
-        tile = @map.getTile pos
-        image = tile.currentImage
-        @drawImage(pos, image)
+
+    # Draw tiles
+    @context.drawImage @tileCanvas, @offset.x , @offset.y, @tileCanvas.width / @zoom, @tileCanvas.height / @zoom
 
     # Overlays for hovered
     if @map.hovered
@@ -84,7 +82,23 @@ class CanvasRenderer
     @context.fillStyle = 'red'
     @context.font = '40pt Arial'
     @context.fillText "Player #{@map.currentPlayer}", 10, 60
-    
+
+  ready: () ->
+    @tileCanvas = document.createElement 'canvas'
+    @tileCanvas.height = 200 * @map.height
+    @tileCanvas.width = 200 * @map.width
+    context = @tileCanvas.getContext '2d'
+    for y in [0...@map.height]
+      for x in [0...@map.width]
+        pos = {x: x, y: y}
+        tile = @map.getTile pos
+        image = tile.currentImage
+        if x % 2 == 1
+          hexOffsetY = 100
+        else
+          hexOffsetY = 0
+        context.drawImage image, pos.x * 150, (pos.y * 200) + hexOffsetY
+
   draw: () ->
     that = this
     window.requestAnimationFrame () ->

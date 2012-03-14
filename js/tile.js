@@ -1,5 +1,7 @@
 var ImageSet, Tile;
+
 ImageSet = (function() {
+
   function ImageSet(imageSrc) {
     var that;
     this.normal = new Image;
@@ -10,14 +12,20 @@ ImageSet = (function() {
       return that.inverted = Filters.invert(that.normal);
     };
   }
+
   return ImageSet;
+
 })();
+
 Tile = (function() {
+
   function Tile(imageSet, element) {
     this.imageSet = imageSet;
     this.element = element;
     this.currentImage = imageSet.normal;
     this.oldImages = [];
   }
+
   return Tile;
+
 })();
