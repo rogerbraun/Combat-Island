@@ -60,7 +60,7 @@ class Game
           that.renderer.offset.y -= event.clientY
       else
         if oldzoom < 5
-          that.renderer.zoom += 1 
+          that.renderer.zoom += 1
           that.renderer.offset.x -= event.clientX
           that.renderer.offset.y -= event.clientY
 

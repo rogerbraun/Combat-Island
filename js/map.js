@@ -49,6 +49,7 @@ Map = (function() {
     this.hoveredTile = false;
     this.overlays = [];
     this.brightOverlay = false;
+    this.sounds = {};
   }
 
   Map.prototype.getTile = function(pos) {
@@ -157,12 +158,26 @@ Map = (function() {
     return moveAlongPath(path);
   };
 
+  Map.prototype.playSound = function(sound) {
+    var audio;
+    if (this.sounds[sound]) {
+      audio = new Audio;
+      audio.src = this.sounds[sound];
+      return audio.play();
+    }
+  };
+
   Map.prototype.moveAndAttack = function(unit, otherUnit) {
     var that;
     that = this;
     return this.animatedMove(unit, otherUnit.pos, function() {
       unit.battle(otherUnit);
-      if (otherUnit.currentHealth <= 0) return that.units.remove(otherUnit);
+      if (otherUnit.currentHealth <= 0) {
+        that.playSound('die');
+        return that.units.remove(otherUnit);
+      } else {
+        return that.playSound('attack');
+      }
     });
   };
 

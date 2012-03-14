@@ -74,6 +74,9 @@ level1.units.push(sub)
 level1.units.push(sub2)
 
 
+level1.sounds['attack'] = 'audio/attack_2.wav'
+level1.sounds['die'] = 'audio/attack.wav'
+
 window.onload = () ->
   canvas = document.getElementById 'canvas'
   game = new Game(canvas)

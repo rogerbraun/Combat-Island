@@ -36,6 +36,7 @@ class Map
     @hoveredTile = false
     @overlays = []
     @brightOverlay = false
+    @sounds = {}
 
   getTile: (pos) ->
     @tiles[pos.x + pos.y * @width]
@@ -108,14 +109,23 @@ class Map
           unit.moveTo(next)
           setTimeout moveAlongPath, 150 
 
-    moveAlongPath path 
+    moveAlongPath path
+
+  playSound: (sound) ->
+    if @sounds[sound]
+      audio = new Audio
+      audio.src = @sounds[sound]
+      audio.play()
 
   moveAndAttack: (unit, otherUnit) ->
     that = this
     @animatedMove unit, otherUnit.pos, () ->
       unit.battle otherUnit
       if otherUnit.currentHealth <= 0
+        that.playSound 'die'
         that.units.remove otherUnit
+      else
+        that.playSound 'attack'
 
 
   possiblyMoveUnit: () ->

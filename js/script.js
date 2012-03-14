@@ -60,6 +60,10 @@ level1.units.push(sub);
 
 level1.units.push(sub2);
 
+level1.sounds['attack'] = 'audio/attack_2.wav';
+
+level1.sounds['die'] = 'audio/attack.wav';
+
 window.onload = function() {
   var canvas, game;
   canvas = document.getElementById('canvas');
