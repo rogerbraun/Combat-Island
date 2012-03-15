@@ -17,7 +17,6 @@ Array::remove = (el) ->
   else
     this
 
-
 class Map
   constructor: (width, height) ->
     @width = width
@@ -98,7 +97,7 @@ class Map
       @currentPlayer = 1
 
   animatedMove: (unit, goal, callback) ->
-    path = @findPath(unit, goal)
+    path = @findPath(unit, goal).path
 
     moveAlongPath = () ->
       if path.length > 0
@@ -127,13 +126,11 @@ class Map
       else
         that.playSound 'attack'
 
-
   possiblyMoveUnit: () ->
     if @inPossibleMoves @selected
       if @unitOnTile @selected
         # Attack unit on selected tile
         @moveAndAttack(@selectedUnit, @getUnit(@selected))
-        #@selectedUnit.battle(@getUnit(@selected))
       else
         # Move unit to empty tile
         @animatedMove @selectedUnit, @selected
@@ -192,7 +189,8 @@ class Map
     unit.canMoveTo(tile) && (!@unitOnTile(pos) || (@unitOnTile(pos).player != @currentPlayer))
 
   possibleMoves: (unit) ->
-    @possibleMovesHelper unit, unit.moves - 1, @neighbours(unit.pos)
+    # Find an impossible path, this gets all possible moves.
+    @findPath(unit, {x: -1, y: -1}, unit.moves).visitedNodes
 
   uniquePositions: (array) ->
     res = []
@@ -205,23 +203,9 @@ class Map
         res.push element
     res
 
-  possibleMovesHelper: (unit, movesLeft, neighbours, visited) ->
-    that = this
-    neighbours = neighbours.filter (neighbour) ->
-      that.isPossibleMove unit, neighbour
-
-    if movesLeft == 0
-      neighbours
-    else
-      res = [].concat(neighbours)
-      for neighbour in neighbours
-        next_neighbours = @neighbours neighbour
-        res = res.concat(@possibleMovesHelper(unit, movesLeft - 1, next_neighbours))
-      res = @uniquePositions(res)
-
   # Supposed to be an A* algorithm
-  findPath: (unit, goal) ->
-    
+  findPath: (unit, goal, maxWeight) ->
+
     isEqualNode = (node, otherNode) ->
       node.pos.x == otherNode.pos.x && node.pos.y == otherNode.pos.y
 
@@ -263,8 +247,7 @@ class Map
     open = [startNode]
     closed = []
 
-
-    while !isEqualNode(sortNodes(open)[0], goalNode)
+    while open.length > 0 && !isEqualNode(sortNodes(open)[0], goalNode)
       currentNode = open.shift()
       closed.push(currentNode)
       
@@ -290,19 +273,25 @@ class Map
         inOpen = getNode(neighbourNode, open)
         inClosed = getNode(neighbourNode, closed)
 
-        if !inOpen && !inClosed
+        if !inOpen && !inClosed && (!(maxWeight?) || neighbourNode.weight <= maxWeight)
           open.push neighbourNode
-
   
     res = []
-    goalNode = open[0]
-    while goalNode.parent
-      res.push(goalNode)
-      goalNode = goalNode.parent
+    if open.length > 0
+      goalNode = open[0]
+      while goalNode.parent
+        res.push(goalNode)
+        goalNode = goalNode.parent
 
-    res = res.map (el) ->
-      el.pos
-    res.reverse()
+      res = res.map (el) ->
+        el.pos
+      res = res.reverse()
+    ret = {
+      path: res,
+      visitedNodes: closed.map (node) ->
+        node.pos
+    }
+    return ret
 
   unitOnTile: (tilePos) ->
     @units.some (unit) ->

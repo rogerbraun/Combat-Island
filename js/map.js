@@ -142,7 +142,7 @@ Map = (function() {
 
   Map.prototype.animatedMove = function(unit, goal, callback) {
     var moveAlongPath, path;
-    path = this.findPath(unit, goal);
+    path = this.findPath(unit, goal).path;
     moveAlongPath = function() {
       var next;
       if (path.length > 0) {
@@ -259,7 +259,10 @@ Map = (function() {
   };
 
   Map.prototype.possibleMoves = function(unit) {
-    return this.possibleMovesHelper(unit, unit.moves - 1, this.neighbours(unit.pos));
+    return this.findPath(unit, {
+      x: -1,
+      y: -1
+    }, unit.moves).visitedNodes;
   };
 
   Map.prototype.uniquePositions = function(array) {
@@ -277,27 +280,8 @@ Map = (function() {
     return res;
   };
 
-  Map.prototype.possibleMovesHelper = function(unit, movesLeft, neighbours, visited) {
-    var neighbour, next_neighbours, res, that, _i, _len;
-    that = this;
-    neighbours = neighbours.filter(function(neighbour) {
-      return that.isPossibleMove(unit, neighbour);
-    });
-    if (movesLeft === 0) {
-      return neighbours;
-    } else {
-      res = [].concat(neighbours);
-      for (_i = 0, _len = neighbours.length; _i < _len; _i++) {
-        neighbour = neighbours[_i];
-        next_neighbours = this.neighbours(neighbour);
-        res = res.concat(this.possibleMovesHelper(unit, movesLeft - 1, next_neighbours));
-      }
-      return res = this.uniquePositions(res);
-    }
-  };
-
-  Map.prototype.findPath = function(unit, goal) {
-    var closed, combinedWeight, currentNode, getNode, goalNode, heuristicWeight, inClosed, inOpen, isEqualNode, neighbour, neighbourNode, neighbours, open, removeNode, res, sortNodes, startNode, _i, _len;
+  Map.prototype.findPath = function(unit, goal, maxWeight) {
+    var closed, combinedWeight, currentNode, getNode, goalNode, heuristicWeight, inClosed, inOpen, isEqualNode, neighbour, neighbourNode, neighbours, open, removeNode, res, ret, sortNodes, startNode, _i, _len;
     isEqualNode = function(node, otherNode) {
       return node.pos.x === otherNode.pos.x && node.pos.y === otherNode.pos.y;
     };
@@ -342,7 +326,7 @@ Map = (function() {
     };
     open = [startNode];
     closed = [];
-    while (!isEqualNode(sortNodes(open)[0], goalNode)) {
+    while (open.length > 0 && !isEqualNode(sortNodes(open)[0], goalNode)) {
       currentNode = open.shift();
       closed.push(currentNode);
       neighbours = this.neighbours(currentNode.pos);
@@ -366,19 +350,30 @@ Map = (function() {
         }
         inOpen = getNode(neighbourNode, open);
         inClosed = getNode(neighbourNode, closed);
-        if (!inOpen && !inClosed) open.push(neighbourNode);
+        if (!inOpen && !inClosed && (!(maxWeight != null) || neighbourNode.weight <= maxWeight)) {
+          open.push(neighbourNode);
+        }
       }
     }
     res = [];
-    goalNode = open[0];
-    while (goalNode.parent) {
-      res.push(goalNode);
-      goalNode = goalNode.parent;
+    if (open.length > 0) {
+      goalNode = open[0];
+      while (goalNode.parent) {
+        res.push(goalNode);
+        goalNode = goalNode.parent;
+      }
+      res = res.map(function(el) {
+        return el.pos;
+      });
+      res = res.reverse();
     }
-    res = res.map(function(el) {
-      return el.pos;
-    });
-    return res.reverse();
+    ret = {
+      path: res,
+      visitedNodes: closed.map(function(node) {
+        return node.pos;
+      })
+    };
+    return ret;
   };
 
   Map.prototype.unitOnTile = function(tilePos) {
