@@ -65,9 +65,13 @@ level1.sounds['attack'] = 'audio/attack_2.wav';
 level1.sounds['die'] = 'audio/attack.wav';
 
 window.onload = function() {
-  var canvas, game;
-  canvas = document.getElementById('canvas');
-  game = new Game(canvas);
-  game.changeMap(level1);
-  return game.start();
+  var assets;
+  assets = ['audio/attack_2.wav', 'audio/attack.wav', 'images/tank-unit.png', 'images/submarine-unit.png', 'images/water-tile.png', 'images/grass-tile.png', 'images/forest-tile.png', 'images/red-overlay.png', 'images/white-overlay.png', 'images/blue-overlay.png'];
+  return new Loader(assets, function() {
+    var canvas, game;
+    canvas = document.getElementById('canvas');
+    game = new Game(canvas);
+    game.changeMap(level1);
+    return game.start();
+  });
 };
